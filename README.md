@@ -1,7 +1,9 @@
 # PageContentReaderView
-## Getting started
+
 [![Build Status](https://travis-ci.org/ridibooks/pagecontentreaderview.svg?branch=master)](https://travis-ci.org/ridibooks/pagecontentreaderview)
 [![Release](https://jitpack.io/v/ridibooks/pagecontentreaderview.svg)](https://jitpack.io/#ridibooks/pagecontentreaderview)
+
+## Getting started
 
 This library is distributed by [jitpack](https://jitpack.io).
 

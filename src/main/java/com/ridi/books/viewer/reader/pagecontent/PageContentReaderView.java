@@ -526,21 +526,26 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         // offset it to center within the screen area, and to keep
         // the views spaced out
 
-        if (keepScrollOffset && keptScrollOffset != null) {
-            cvOffset = keptScrollOffset;
-            keptScrollOffset = null;
-        } else {
-            cvOffset = subScreenSizeOffset(cv);
-        }
-        
+        cvOffset = subScreenSizeOffset(cv);
+
         if (notPresent) {
             // Main item not already present. Just place it top left
+            if (keepScrollOffset && keptScrollOffset != null) {
+                cvOffset = keptScrollOffset;
+                keptScrollOffset = null;
+            }
             cvLeft = cvOffset.x;
             cvTop  = cvOffset.y;
         } else {
             // Main item already present. Adjust by scroll offsets
-            cvLeft = cv.getLeft() + scrollOffsetX;
-            cvTop  = cv.getTop()  + scrollOffsetY;
+            if (keepScrollOffset && keptScrollOffset != null) {
+                cvLeft = keptScrollOffset.x + scrollOffsetX;
+                cvTop = keptScrollOffset.y + scrollOffsetY;
+                keptScrollOffset = null;
+            } else {
+                cvLeft = cv.getLeft() + scrollOffsetX;
+                cvTop  = cv.getTop()  + scrollOffsetY;
+            }
         }
         
         // Scroll values have been accounted for
@@ -976,13 +981,17 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             switch (direction) {
                 case MOVING_LEFT:
                     if (bounds.left >= 0) {
-                        viewRightOrDown();
+                        if (!keepScrollOffset) {
+                            viewRightOrDown();
+                        }
                         return true;
                     }
                     break;
                 case MOVING_RIGHT:
                     if (bounds.right <= 0) {
-                        viewLeftOrUp();
+                        if (!keepScrollOffset) {
+                            viewLeftOrUp();
+                        }
                         return true;
                     }
                     break;

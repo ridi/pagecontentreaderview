@@ -67,9 +67,9 @@ public class DoublePageContent implements PageContent {
                                  int pageWidth, int pageHeight, boolean forHighQuality) {
         Bitmap leftBitmap = null, rightBitmap = null;
 
-        int leftPageWidth = (int)(pageWidth * leftPage.getWidth() / getWidth());
+        int leftPageWidth = (int) (pageWidth * leftPage.getWidth() / getWidth());
         int leftBmWidth = Math.min(bitmapWidth, leftPageWidth - (-startX));
-        int leftPageHeight = (int)(pageHeight * leftPage.getHeight() / getHeight());
+        int leftPageHeight = (int) (pageHeight * leftPage.getHeight() / getHeight());
         int leftBmHeight = bitmapHeight;
 
         // 필요한만큼만 확보
@@ -86,9 +86,9 @@ public class DoublePageContent implements PageContent {
             return leftBitmap;
         }
 
-        int rightPageWidth = (int)(pageWidth * rightPage.getWidth() / getWidth());
+        int rightPageWidth = (int) (pageWidth * rightPage.getWidth() / getWidth());
         int rightBmWidth = Math.min(bitmapWidth - leftBmWidth, rightPageWidth);
-        int rightPageHeight = (int)(pageHeight * rightPage.getHeight() / getHeight());
+        int rightPageHeight = (int) (pageHeight * rightPage.getHeight() / getHeight());
         int rightBmHeight = bitmapHeight;
 
         // 필요한만큼만 확보
@@ -118,7 +118,7 @@ public class DoublePageContent implements PageContent {
             leftBitmap.recycle();
         }
         if (rightBitmap != null) {
-            int left = leftBitmap != null ? leftBitmap.getWidth() : rightBitmap.getWidth();
+            int left = leftBitmap != null ? leftBitmap.getWidth() : 0;
             canvas.drawBitmap(rightBitmap, null,
                     new Rect(left, 0, left + rightBitmap.getWidth(), rightBitmap.getHeight()), null);
             rightBitmap.recycle();

@@ -278,8 +278,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private void measureView(View view) {
         // See what size the view wants to be
         view.measure(MeasureSpec.UNSPECIFIED, MeasureSpec.UNSPECIFIED);
-        view.measure(MeasureSpec.EXACTLY | (int)(view.getMeasuredWidth() * scale),
-                MeasureSpec.EXACTLY | (int)(view.getMeasuredHeight() * scale));
+        view.measure(MeasureSpec.EXACTLY | (int) (view.getMeasuredWidth() * scale),
+                MeasureSpec.EXACTLY | (int) (view.getMeasuredHeight() * scale));
     }
     
     private Rect getScrollBounds(int left, int top, int right, int bottom) {
@@ -390,27 +390,27 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             int gap = dipToPixel(GAP_DP);
             
             if (isScrollMode()) {
-                int total = (int)(offset.y * 2 + view.getMeasuredHeight() * count + gap * scale * (count - 1));
-                int current = (int)(offset.y + prevCount * (view.getMeasuredHeight() + gap * scale) - view.getTop());
+                int total = (int) (offset.y * 2 + view.getMeasuredHeight() * count + gap * scale * (count - 1));
+                int current = (int) (offset.y + prevCount * (view.getMeasuredHeight() + gap * scale) - view.getTop());
 
-                float size = (float)getHeight() * getHeight() / total;
+                float size = (float) getHeight() * getHeight() / total;
                 if (size < SCROLLBAR_MIN_THUMB_SIZE) {
                     size = SCROLLBAR_MIN_THUMB_SIZE;
-                    total = (int)((total - getHeight()) + total * size / getHeight());
+                    total = (int) ((total - getHeight()) + total * size / getHeight());
                 }
-                float position = (float)getHeight() * current / total;
+                float position = (float) getHeight() * current / total;
 
                 drawVerticalScrollBar(canvas, paint, position, size);
             } else {
-                int total = (int)(offset.x * 2 + view.getMeasuredWidth() * count + gap * scale * (count - 1));
-                int current = (int)(offset.x + prevCount * (view.getMeasuredWidth() + gap * scale) - view.getLeft());
+                int total = (int) (offset.x * 2 + view.getMeasuredWidth() * count + gap * scale * (count - 1));
+                int current = (int) (offset.x + prevCount * (view.getMeasuredWidth() + gap * scale) - view.getLeft());
 
-                float size = (float)getWidth() * getWidth() / total;
+                float size = (float) getWidth() * getWidth() / total;
                 if (size < SCROLLBAR_MIN_THUMB_SIZE) {
                     size = SCROLLBAR_MIN_THUMB_SIZE;
-                    total = (int)((total - getWidth()) + total * size / getWidth());
+                    total = (int) ((total - getWidth()) + total * size / getWidth());
                 }
-                float position = (float)getWidth() * current / total;
+                float position = (float) getWidth() * current / total;
 
                 drawHorizontalScrollBar(canvas, paint, position, size);
             }
@@ -418,14 +418,14 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         
         if (!scrollMode || count == 1) {
             if (view.getMeasuredHeight() > getHeight()) {
-                float position = (float)getHeight() * -view.getTop() / view.getMeasuredHeight();
-                float size = (float)getHeight() * getHeight() / view.getMeasuredHeight();
+                float position = (float) getHeight() * -view.getTop() / view.getMeasuredHeight();
+                float size = (float) getHeight() * getHeight() / view.getMeasuredHeight();
                 
                 drawVerticalScrollBar(canvas, paint, position, size);
             }
             if (view.getMeasuredWidth() > getWidth()) {
-                float position = (float)getWidth() * -view.getLeft() / view.getMeasuredWidth();
-                float size = (float)getWidth() * getWidth() / view.getMeasuredWidth();
+                float position = (float) getWidth() * -view.getLeft() / view.getMeasuredWidth();
+                float size = (float) getWidth() * getWidth() / view.getMeasuredWidth();
 
                 drawHorizontalScrollBar(canvas, paint, position, size);
             }
@@ -1160,8 +1160,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             return;
         }
 
-        int viewFocusX = (int)focusX - (view.getLeft() + scrollOffsetX);
-        int viewFocusY = (int)focusY - (view.getTop() + scrollOffsetY);
+        int viewFocusX = (int) focusX - (view.getLeft() + scrollOffsetX);
+        int viewFocusY = (int) focusY - (view.getTop() + scrollOffsetY);
 
         scrollOffsetX += viewFocusX - viewFocusX * factor;
         scrollOffsetY += viewFocusY - viewFocusY * factor;

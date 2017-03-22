@@ -27,6 +27,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                                       ScaleGestureDetector.OnScaleGestureListener {
     private static final float MIN_SCALE                        = 1.0f;
     private static final float MAX_SCALE                        = 5.0f;
+    private static final float DEFAULT_SCALE                    = MIN_SCALE;
 
     private static final int DEFAULT_FLING_DISTANCE_THRESHOLD   = 120;
     private static final int DEFAULT_FLING_VELOCITY_THRESHOLD   = 1000;
@@ -72,7 +73,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private float scale;
     private boolean scaling;
     private boolean doubleTapScalingEnabled;
-    private float initialScale = MIN_SCALE;
+    private float initialScale = DEFAULT_SCALE;
+    private boolean scaleInitialized;
     private int flingDistanceThreshold = DEFAULT_FLING_DISTANCE_THRESHOLD;
     private int flingVelocityThreshold = DEFAULT_FLING_VELOCITY_THRESHOLD;
     
@@ -95,7 +97,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         super(context, attrs);
         
         gestureDetector = new GestureDetector(context, this);
-        scale = initialScale;
+        scale = DEFAULT_SCALE;
         scaleGestureDetector = new ScaleGestureDetector(context, this);
         scroller = new Scroller(context);
         
@@ -176,7 +178,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         if (index >= 0 && index < adapter.getCount()) {
             currentIndex = index;
             listener.onCurrentIndexChanged();
-            scale = initialScale;
+            scale = DEFAULT_SCALE;
             resetLayout = true;
             requestLayout();
         }
@@ -472,6 +474,11 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         
         PageContentView cv = childViews.get(currentIndex);
         Point cvOffset;
+
+        if (!scaleInitialized) {
+            scale = initialScale;
+            scaleInitialized = true;
+        }
         
         if (!resetLayout) {
             // Move to next or previous if current is sufficiently off center
@@ -839,7 +846,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     public void notifyAdapterChanged() {
         childViews.clear();
         removeAllViewsInLayout();
-        scale = initialScale;
+        scale = DEFAULT_SCALE;
         resetLayout = true;
         requestLayout();
     }
@@ -908,7 +915,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         if (!scrollDisabled) {
-            if (scale == initialScale && !scrollMode) {
+            if (scale == DEFAULT_SCALE && !scrollMode) {
                 if (listener.onScrollWithoutScaling(e1, e2, distanceX, distanceY)) {
                     return true;
                 }
@@ -1057,9 +1064,9 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         /*
          * Double tap 확대 / 축소
          *
-         * 1. initialScale이 아닐 경우에는, initialScale맞춰준다.
+         * 1. DEFAULT_SCALE이 아닐 경우에는, DEFAULT_SCALE 맞춰준다.
          *
-         * 2. initialScale인 경우에는 아래의 방법에 따라 확대한다.
+         * 2. DEFAULT_SCALE인 경우에는 아래의 방법에 따라 확대한다.
          *  - content width > content height : 두 쪽 보기 - (content width / 2 (한 쪽 content width)가 화면에 가득차도록 확대)
          *
          *  - content width < content height : 한 쪽 보기 - 1.5배 확대
@@ -1067,7 +1074,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         float focusX = e.getX();
         float focusY = e.getY();
         float toScale;
-        if (scale == initialScale) {
+        if (scale == DEFAULT_SCALE) {
             float contentWidth = view.getWidth();
             float contentHeight = view.getHeight();
 
@@ -1090,7 +1097,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 toScale = 1.5f;
             }
         } else {
-            toScale = initialScale;
+            toScale = DEFAULT_SCALE;
         }
 
         prepareScaling();
@@ -1127,9 +1134,9 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         AccelerateDecelerateInterpolator interpolator = new AccelerateDecelerateInterpolator();
         for (int i = 0; i < animationCount; i++) {
             final float scaleBit;
-            if (toScale == initialScale) {
+            if (toScale == DEFAULT_SCALE) {
                 // 축소
-                scaleBit = scale - ((scale - initialScale) * (i + 1) / animationCount);
+                scaleBit = scale - ((scale - DEFAULT_SCALE) * (i + 1) / animationCount);
             } else {
                 // 확대
                 scaleBit = (toScale / animationCount) * (i + 1);

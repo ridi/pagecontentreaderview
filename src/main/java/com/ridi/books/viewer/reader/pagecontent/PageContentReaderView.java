@@ -73,8 +73,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private float scale;
     private boolean scaling;
     private boolean doubleTapScalingEnabled;
-    private float initialScale = DEFAULT_SCALE;
-    private boolean scaleInitialized;
+    private float requestedScale = DEFAULT_SCALE;
     private int flingDistanceThreshold = DEFAULT_FLING_DISTANCE_THRESHOLD;
     private int flingVelocityThreshold = DEFAULT_FLING_VELOCITY_THRESHOLD;
     
@@ -475,9 +474,9 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         PageContentView cv = childViews.get(currentIndex);
         Point cvOffset;
 
-        if (!scaleInitialized) {
-            scale = initialScale;
-            scaleInitialized = true;
+        if (requestedScale != DEFAULT_SCALE) {
+            scale = requestedScale;
+            requestedScale= DEFAULT_SCALE;
         }
         
         if (!resetLayout) {
@@ -1269,10 +1268,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         return Math.round(dip * getResources().getDisplayMetrics().density);
     }
 
-    public void applyKeptScrollOffset(Point keptScrollOffset, float initialScale) {
-        this.keptScrollOffset = keptScrollOffset;
-        this.keepScrollOffset = true;
-        this.initialScale = initialScale;
+    public void requestScale(float scale, Point scrollOffset) {
+        requestedScale = scale;
+        if (scrollOffset != null) {
+            keptScrollOffset = scrollOffset;
+            keepScrollOffset = true;
+        }
     }
 
     public float getScale() {

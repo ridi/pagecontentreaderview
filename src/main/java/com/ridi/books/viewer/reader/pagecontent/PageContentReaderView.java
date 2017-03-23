@@ -476,7 +476,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
 
         if (requestedScale != DEFAULT_SCALE) {
             scale = requestedScale;
-            requestedScale= DEFAULT_SCALE;
+            requestedScale = DEFAULT_SCALE;
         }
         
         if (!resetLayout) {

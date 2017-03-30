@@ -65,7 +65,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private boolean reverseMode;
     private boolean slidingEnabled;
 
-    private boolean keepScrollOffset;
+    private boolean keepScrollOffsetEnabled;
     private Point keptScrollOffset;
     
     private GestureDetector gestureDetector;
@@ -164,8 +164,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         setViewMode(scrollMode, reverseMode, slidingEnabled);
     }
 
-    public void setKeepScrollOffset(boolean keepScrollOffset) {
-        this.keepScrollOffset = keepScrollOffset;
+    public void setKeepScrollOffsetEnabled(boolean keepScrollOffsetEnabled) {
+        this.keepScrollOffsetEnabled = keepScrollOffsetEnabled;
     }
 
     public void setDoubleTapScalingEnabled(boolean doubleTapScalingEnabled) {
@@ -185,6 +185,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     public int getCurrentIndex() {
         return currentIndex;
+    }
+
+    private boolean shouldKeepScrollOffset() {
+        return keepScrollOffsetEnabled && scale > MIN_SCALE;
     }
 
     private boolean isLeftOrUpIndexAvailable() {
@@ -536,7 +540,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
 
         if (notPresent) {
             // Main item not already present. Just place it top left
-            if (keepScrollOffset && keptScrollOffset != null) {
+            if (shouldKeepScrollOffset() && keptScrollOffset != null) {
                 cvOffset = keptScrollOffset;
                 keptScrollOffset = null;
             }
@@ -544,7 +548,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             cvTop  = cvOffset.y;
         } else {
             // Main item already present. Adjust by scroll offsets
-            if (keepScrollOffset && keptScrollOffset != null) {
+            if (shouldKeepScrollOffset() && keptScrollOffset != null) {
                 cvLeft = keptScrollOffset.x + scrollOffsetX;
                 cvTop = keptScrollOffset.y + scrollOffsetY;
                 keptScrollOffset = null;
@@ -987,7 +991,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             switch (direction) {
                 case MOVING_LEFT:
                     if (bounds.left >= 0) {
-                        if (!keepScrollOffset) {
+                        if (!shouldKeepScrollOffset()) {
                             viewRightOrDown();
                         }
                         return true;
@@ -995,7 +999,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                     break;
                 case MOVING_RIGHT:
                     if (bounds.right <= 0) {
-                        if (!keepScrollOffset) {
+                        if (!shouldKeepScrollOffset()) {
                             viewLeftOrUp();
                         }
                         return true;
@@ -1256,7 +1260,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
 
     private void keepScrollOffsetIfNeeded() {
-        if (keepScrollOffset) {
+        if (shouldKeepScrollOffset()) {
             View view = childViews.get(currentIndex);
             if (view != null) {
                 keptScrollOffset = new Point(view.getLeft(), view.getTop());
@@ -1272,7 +1276,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         requestedScale = scale;
         if (scrollOffset != null) {
             keptScrollOffset = scrollOffset;
-            keepScrollOffset = true;
+            keepScrollOffsetEnabled = true;
         }
     }
 

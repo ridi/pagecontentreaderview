@@ -1274,9 +1274,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
 
     public void requestScale(float scale, Point scrollOffset) {
         requestedScale = scale;
-        if (scrollOffset != null) {
+        if (keepScrollOffsetEnabled && scrollOffset != null) {
             keptScrollOffset = scrollOffset;
-            keepScrollOffsetEnabled = true;
         }
     }
 

@@ -1285,6 +1285,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
 
     public Point getScrollOffset() {
         View view = childViews.get(currentIndex);
+        if (view == null) {
+            return null;
+        }
+
         return new Point(view.getLeft(), view.getTop());
     }
 }

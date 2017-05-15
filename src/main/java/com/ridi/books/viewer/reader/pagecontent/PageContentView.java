@@ -9,23 +9,10 @@ import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-public class PageContentView extends ViewGroup {
-    public interface Listener {
-        void onStartBackgroundTask();
-        void onCompleteBackgroundTask();
-    }
-
-    public interface BitmapPostProcessor {
-        Bitmap process(Bitmap src);
-    }
-
-    public enum ScaleMode {
-        AUTO, WIDTH, HEIGHT
-    }
-    
+class PageContentView extends ViewGroup {
     private Size canvasSize;
-    private ScaleMode scaleMode;
-    private Listener listener;
+    private FitMode fitMode;
+    private BackgroundTaskListener backgroundTaskListener;
 
     private Size size;
     
@@ -41,13 +28,13 @@ public class PageContentView extends ViewGroup {
     
     private boolean rendered;
 
-    public PageContentView(Context context, Size canvasSize, ScaleMode scaleMode,
-                           Listener listener, BitmapPostProcessor... postProcessors) {
+    PageContentView(Context context, int canvasWidth, int canvasHeight,
+                    FitMode fitMode, BackgroundTaskListener backgroundTaskListener,
+                    BitmapPostProcessor... postProcessors) {
         this(context, null, 0);
-
-        this.canvasSize = canvasSize;
-        this.scaleMode = scaleMode;
-        this.listener = listener;
+        this.canvasSize = new Size(canvasWidth, canvasHeight);
+        this.fitMode = fitMode;
+        this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessors = postProcessors;
 
         entireView = new ImageView(context);
@@ -88,14 +75,14 @@ public class PageContentView extends ViewGroup {
     }
     
     private void onStartBackgroundTask() {
-        if (listener != null) {
-            listener.onStartBackgroundTask();
+        if (backgroundTaskListener != null) {
+            backgroundTaskListener.onStartBackgroundTask();
         }
     }
     
     private void onCompleteBackgroundTask() {
-        if (listener != null) {
-            listener.onCompleteBackgroundTask();
+        if (backgroundTaskListener != null) {
+            backgroundTaskListener.onCompleteBackgroundTask();
         }
     }
     
@@ -108,6 +95,8 @@ public class PageContentView extends ViewGroup {
                 width = size.width;
                 break;
             default:
+            case MeasureSpec.AT_MOST:
+            case MeasureSpec.EXACTLY:
                 width = MeasureSpec.getSize(widthMeasureSpec);
         }
         switch(MeasureSpec.getMode(heightMeasureSpec)) {
@@ -115,6 +104,8 @@ public class PageContentView extends ViewGroup {
                 height = size.height;
                 break;
             default:
+            case MeasureSpec.AT_MOST:
+            case MeasureSpec.EXACTLY:
                 height = MeasureSpec.getSize(heightMeasureSpec);
         }
         
@@ -183,23 +174,21 @@ public class PageContentView extends ViewGroup {
         
         // Calculate scaled size that fits within the screen limits
         // This is the size at minimum zoom
-        float pageWidth = this.pageContent.getWidth();
-        float pageHeight = this.pageContent.getHeight();
-        
+        SizeF contentSize = this.pageContent.getSize();
         float scale;
-        switch (scaleMode) {
+        switch (fitMode) {
             case WIDTH:
-                scale = canvasSize.width / pageWidth;
+                scale = canvasSize.width / contentSize.width;
                 break;
             case HEIGHT:
-                scale = canvasSize.height / pageHeight;
+                scale = canvasSize.height / contentSize.height;
                 break;
             default:
             case AUTO:
-                scale = Math.min(canvasSize.width / pageWidth, canvasSize.height / pageHeight);
-                break;
+                scale = Math.min(canvasSize.width / contentSize.width,
+                        canvasSize.height / contentSize.height);
         }
-        size = new Size((int) (pageWidth * scale), (int) (pageHeight * scale));
+        size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         // Render the page in the background
         entireRenderingTask = new AsyncRenderingTask<Void, Void, Bitmap>() {
@@ -213,8 +202,8 @@ public class PageContentView extends ViewGroup {
                 PageContent pageContent = PageContentView.this.pageContent;
 
                 if (pageContent != null) {
-                    Bitmap bitmap = pageContent.renderToBitmap(size.width, size.height,
-                            0, 0, size.width, size.height, false);
+                    Bitmap bitmap = pageContent.renderToBitmap(
+                            size.width, size.height, 0, 0, size.width, size.height, false);
                     return applyPostProcessors(bitmap);
                 } else {
                     return null;
@@ -355,6 +344,14 @@ public class PageContentView extends ViewGroup {
         public Size(int width, int height) {
             this.width = width;
             this.height = height;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Size size = (Size) obj;
+            return width == size.width && height == size.height;
         }
     }
     

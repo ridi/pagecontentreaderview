@@ -1,22 +1,38 @@
 package com.ridi.books.viewer.reader.pagecontent;
 
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 public class PageContentViewAdapter extends BaseAdapter {
+    private final Context context;
     private PageContentProvider provider;
-    private PageContentViewFactory viewFactory;
+    private FitMode fitMode;
+    private final BackgroundTaskListener backgroundTaskListener;
+    private final BitmapPostProcessor[] postProcessors;
+
     
-    public PageContentViewAdapter(PageContentProvider provider, PageContentViewFactory viewFactory) {
+    public PageContentViewAdapter(Context context, PageContentProvider provider,
+                                  FitMode fitMode, BackgroundTaskListener backgroundTaskListener,
+                                  BitmapPostProcessor... postProcessors) {
+        this.context = context;
         this.provider = provider;
-        this.viewFactory = viewFactory;
+        this.fitMode = fitMode;
+        this.backgroundTaskListener = backgroundTaskListener;
+        this.postProcessors = postProcessors;
     }
     
     public void setPageContentProvider(PageContentProvider provider) {
         this.provider = provider;
+        notifyDataSetChanged();
     }
-    
+
+    public void setFitMode(FitMode fitMode) {
+        this.fitMode = fitMode;
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getCount() {
         return provider.getPageContentCount();
@@ -35,20 +51,17 @@ public class PageContentViewAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         PageContentView view;
-        
         if (convertView == null) {
-            view = viewFactory.createContentView(
-                    new PageContentView.Size(parent.getWidth(), parent.getHeight()));
+            view = new PageContentView(context, parent.getWidth(), parent.getHeight(),
+                    fitMode, backgroundTaskListener, postProcessors);
         } else {
             view = (PageContentView) convertView;
         }
-        
         view.loadPageContent(provider, position);
-        
         return view;
     }
-    
-    public interface PageContentViewFactory {
-        PageContentView createContentView(PageContentView.Size canvasSize);
+
+    public SizeF getPageContentSize(int position) {
+        return provider.getPageContentSize(position);
     }
 }

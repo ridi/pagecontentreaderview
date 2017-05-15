@@ -7,8 +7,8 @@ import android.widget.BaseAdapter;
 
 public class PageContentViewAdapter extends BaseAdapter {
     private final Context context;
-    private PageContentProvider provider;
-    private FitMode fitMode;
+    private final PageContentProvider provider;
+    private final FitMode fitMode;
     private final BackgroundTaskListener backgroundTaskListener;
     private final BitmapPostProcessor[] postProcessors;
 
@@ -22,15 +22,9 @@ public class PageContentViewAdapter extends BaseAdapter {
         this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessors = postProcessors;
     }
-    
-    public void setPageContentProvider(PageContentProvider provider) {
-        this.provider = provider;
-        notifyDataSetChanged();
-    }
 
-    public void setFitMode(FitMode fitMode) {
-        this.fitMode = fitMode;
-        notifyDataSetChanged();
+    public FitMode getFitMode() {
+        return fitMode;
     }
 
     @Override

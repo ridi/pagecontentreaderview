@@ -175,19 +175,7 @@ class PageContentView extends ViewGroup {
         // Calculate scaled size that fits within the screen limits
         // This is the size at minimum zoom
         SizeF contentSize = this.pageContent.getSize();
-        float scale;
-        switch (fitMode) {
-            case WIDTH:
-                scale = canvasSize.width / contentSize.width;
-                break;
-            case HEIGHT:
-                scale = canvasSize.height / contentSize.height;
-                break;
-            default:
-            case AUTO:
-                scale = Math.min(canvasSize.width / contentSize.width,
-                        canvasSize.height / contentSize.height);
-        }
+        float scale = fitMode.calculateScale(contentSize, canvasSize.width, canvasSize.height);
         size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         // Render the page in the background

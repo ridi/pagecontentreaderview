@@ -44,6 +44,13 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private static final int MOVING_RIGHT                       = 2;
     private static final int MOVING_DOWN                        = 3;
     private static final int MOVING_LEFT                        = 4;
+
+    private static final Paint SCROLLBAR_PAINT;
+    static {
+        SCROLLBAR_PAINT = new Paint();
+        SCROLLBAR_PAINT.setColor(SCROLLBAR_COLOR);
+        SCROLLBAR_PAINT.setStrokeWidth(SCROLLBAR_STROKE_WIDTH);
+    }
     
     public interface Listener {
         void onViewModeChanged();
@@ -355,7 +362,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                     // The layout is stable
                     PageContentView cv = null;
                     
-                    for (int i = 0 ; i < childViews.size() ; i++) {
+                    for (int i = 0; i < childViews.size(); i++) {
                         int index = childViews.keyAt(i);
                         PageContentView view = childViews.get(index);
                         
@@ -384,10 +391,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        
-        if (adapter.getCount() > 0) {
-           drawScrollBars(canvas);
-        }
+        drawScrollBars(canvas);
     }
     
     private void drawScrollBars(Canvas canvas) {
@@ -395,90 +399,73 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         if (view == null || view.getMeasuredWidth() == 0 || view.getMeasuredHeight() == 0) {
             return;
         }
-        
-        Point offset = subScreenSizeOffset(view);
+
         int count = adapter.getCount();
-        
-        Paint paint = new Paint();
-        paint.setColor(SCROLLBAR_COLOR);
-        paint.setStrokeWidth(SCROLLBAR_STROKE_WIDTH);
-        
         if (scrollMode && count > 1) {
-            int prevCount = reverseMode ? count - currentIndex - 1 : currentIndex;
             int gap = dipToPixel(GAP_DP);
-            
-            if (scrollMode) {
-                int total = (int) (offset.y * 2 + view.getMeasuredHeight() * count + gap * scale * (count - 1));
-                int current = (int) (offset.y + prevCount * (view.getMeasuredHeight() + gap * scale) - view.getTop());
 
-                float size = (float) getHeight() * getHeight() / total;
-                if (size < SCROLLBAR_MIN_THUMB_SIZE) {
-                    size = SCROLLBAR_MIN_THUMB_SIZE;
-                    total = (int) ((total - getHeight()) + total * size / getHeight());
+            long current = -view.getTop(), total = 0L;
+            for (int i = 0; i < count; i++) {
+                SizeF contentSize = adapter.getPageContentSize(i);
+                float scale = adapter.getFitMode().calculateScale(contentSize, getWidth(), getHeight());
+                float height = contentSize.height * scale * this.scale + gap * this.scale;
+                total += height;
+                if (i < currentIndex) {
+                    current += height;
                 }
-                float position = (float) getHeight() * current / total;
-
-                drawVerticalScrollBar(canvas, paint, position, size);
-            } else {
-                int total = (int) (offset.x * 2 + view.getMeasuredWidth() * count + gap * scale * (count - 1));
-                int current = (int) (offset.x + prevCount * (view.getMeasuredWidth() + gap * scale) - view.getLeft());
-
-                float size = (float) getWidth() * getWidth() / total;
-                if (size < SCROLLBAR_MIN_THUMB_SIZE) {
-                    size = SCROLLBAR_MIN_THUMB_SIZE;
-                    total = (int) ((total - getWidth()) + total * size / getWidth());
-                }
-                float position = (float) getWidth() * current / total;
-
-                drawHorizontalScrollBar(canvas, paint, position, size);
             }
-        }
-        
-        if (!scrollMode || count == 1) {
+
+            float size = (float) getHeight() * getHeight() / total;
+            if (size < SCROLLBAR_MIN_THUMB_SIZE) {
+                size = SCROLLBAR_MIN_THUMB_SIZE;
+                total = (int) ((total - getHeight()) + total * size / getHeight());
+            }
+            float position = (float) getHeight() * current / total;
+            drawVerticalScrollBar(canvas, position, size);
+        } else if (!scrollMode || count == 1) {
             if (view.getMeasuredHeight() > getHeight()) {
                 float position = (float) getHeight() * -view.getTop() / view.getMeasuredHeight();
                 float size = (float) getHeight() * getHeight() / view.getMeasuredHeight();
-                
-                drawVerticalScrollBar(canvas, paint, position, size);
+                drawVerticalScrollBar(canvas, position, size);
             }
             if (view.getMeasuredWidth() > getWidth()) {
                 float position = (float) getWidth() * -view.getLeft() / view.getMeasuredWidth();
                 float size = (float) getWidth() * getWidth() / view.getMeasuredWidth();
-
-                drawHorizontalScrollBar(canvas, paint, position, size);
+                drawHorizontalScrollBar(canvas,  position, size);
             }
         }
     }
     
-    private void drawHorizontalScrollBar(Canvas canvas, Paint paint, float position, float size) {
+    private void drawHorizontalScrollBar(Canvas canvas, float position, float size) {
         if (position < 0) {
             size += position;
             position = 0;
-        }
-        else if (position + size > getWidth()) {
+        } else if (position + size > getWidth()) {
             size -= position + size - getWidth();
         }
         
-        canvas.drawRoundRect(new RectF(position, getHeight() - SCROLLBAR_STROKE_WIDTH, position + size, getHeight()), 4, 2, paint);
+        canvas.drawRoundRect(new RectF(
+                position, getHeight() - SCROLLBAR_STROKE_WIDTH, position + size, getHeight()),
+                4, 2, SCROLLBAR_PAINT);
     }
     
-    private void drawVerticalScrollBar(Canvas canvas, Paint paint, float position, float size) {
+    private void drawVerticalScrollBar(Canvas canvas, float position, float size) {
         if (position < 0) {
             size += position;
             position = 0;
-        }                           
-        else if (position + size > getHeight()) {
+        } else if (position + size > getHeight()) {
             size -= position + size - getHeight();
         }
         
-        canvas.drawRoundRect(new RectF(getWidth() - SCROLLBAR_STROKE_WIDTH, position, getWidth(), position + size), 2, 4, paint);
+        canvas.drawRoundRect(new RectF(
+                getWidth() - SCROLLBAR_STROKE_WIDTH, position, getWidth(), position + size),
+                2, 4, SCROLLBAR_PAINT);
     }
     
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        
-        for (int i = 0 ; i < childViews.size() ; i++) {
+        for (int i = 0; i < childViews.size(); i++) {
             measureView(childViews.valueAt(i));
         }
     }
@@ -825,7 +812,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     private void settleOrUnsettleViews() {
         List<PageContentView> toBeSettled = new ArrayList<>();
-        for (int i = 0 ; i < childViews.size(); i++) {
+        for (int i = 0; i < childViews.size(); i++) {
             PageContentView view = childViews.valueAt(i);
             Rect rect = new Rect(view.getLeft(), view.getTop(),
                                  view.getRight(), view.getBottom());
@@ -1259,7 +1246,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
     
     public void destroy() {
-        for (int i = 0 ; i < childViews.size() ; i++) {
+        for (int i = 0; i < childViews.size(); i++) {
             PageContentView view = childViews.valueAt(i);
             view.clear();
         }

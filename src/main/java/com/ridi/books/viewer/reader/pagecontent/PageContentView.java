@@ -24,18 +24,18 @@ class PageContentView extends ViewGroup {
     private ImageView hqView;  // high quality view
     private AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
     private HighQualityInfo hqInfo;
-    private BitmapPostProcessor[] postProcessors;
+    private BitmapPostProcessor postProcessor;
     
     private boolean rendered;
 
     PageContentView(Context context, int canvasWidth, int canvasHeight,
                     FitMode fitMode, BackgroundTaskListener backgroundTaskListener,
-                    BitmapPostProcessor... postProcessors) {
+                    BitmapPostProcessor postProcessor) {
         this(context, null, 0);
         this.canvasSize = new Size(canvasWidth, canvasHeight);
         this.fitMode = fitMode;
         this.backgroundTaskListener = backgroundTaskListener;
-        this.postProcessors = postProcessors;
+        this.postProcessor = postProcessor;
 
         entireView = new ImageView(context);
         entireView.setBackgroundColor(Color.WHITE);
@@ -192,7 +192,7 @@ class PageContentView extends ViewGroup {
                 if (pageContent != null) {
                     Bitmap bitmap = pageContent.renderToBitmap(
                             size.width, size.height, 0, 0, size.width, size.height, false);
-                    return applyPostProcessors(bitmap);
+                    return applyPostProcessor(bitmap);
                 } else {
                     return null;
                 }
@@ -273,7 +273,7 @@ class PageContentView extends ViewGroup {
 
                         Bitmap bitmap = pageContent.renderToBitmap(bitmapWidth, bitmapHeight,
                                 startX, startY, pageWidth, pageHeight, true);
-                        info.bitmap = applyPostProcessors(bitmap);
+                        info.bitmap = applyPostProcessor(bitmap);
                     }
 
                     return info;
@@ -356,13 +356,9 @@ class PageContentView extends ViewGroup {
     }
 
     private abstract class AsyncRenderingTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
-        protected Bitmap applyPostProcessors(Bitmap bitmap) {
-            for (BitmapPostProcessor processor : postProcessors) {
-                if (bitmap == null) {
-                    break;
-                }
-
-                Bitmap processed = processor.process(bitmap);
+        protected Bitmap applyPostProcessor(Bitmap bitmap) {
+            if (postProcessor != null) {
+                Bitmap processed = postProcessor.process(bitmap);
                 if (processed != bitmap) {
                     bitmap.recycle();
                     bitmap = processed;

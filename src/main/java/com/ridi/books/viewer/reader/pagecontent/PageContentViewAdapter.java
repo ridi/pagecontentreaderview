@@ -5,31 +5,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-public class PageContentViewAdapter extends BaseAdapter {
+public abstract class PageContentViewAdapter extends BaseAdapter {
     private final Context context;
-    private final PageContentProvider provider;
-    private final FitMode fitMode;
-    private final BackgroundTaskListener backgroundTaskListener;
-    private final BitmapPostProcessor[] postProcessors;
-
     
-    public PageContentViewAdapter(Context context, PageContentProvider provider,
-                                  FitMode fitMode, BackgroundTaskListener backgroundTaskListener,
-                                  BitmapPostProcessor... postProcessors) {
+    public PageContentViewAdapter(Context context) {
         this.context = context;
-        this.provider = provider;
-        this.fitMode = fitMode;
-        this.backgroundTaskListener = backgroundTaskListener;
-        this.postProcessors = postProcessors;
-    }
-
-    public FitMode getFitMode() {
-        return fitMode;
     }
 
     @Override
     public int getCount() {
-        return provider.getPageContentCount();
+        return getPageContentProvider().getPageContentCount();
     }
     
     @Override
@@ -47,15 +32,23 @@ public class PageContentViewAdapter extends BaseAdapter {
         PageContentView view;
         if (convertView == null) {
             view = new PageContentView(context, parent.getWidth(), parent.getHeight(),
-                    fitMode, backgroundTaskListener, postProcessors);
+                    getFitMode(), getBackgroundTaskListener(), getBitmapPostProcessors());
         } else {
             view = (PageContentView) convertView;
         }
-        view.loadPageContent(provider, position);
+        view.loadPageContent(getPageContentProvider(), position);
         return view;
     }
 
-    public SizeF getPageContentSize(int position) {
-        return provider.getPageContentSize(position);
+    SizeF getPageContentSize(int position) {
+        return getPageContentProvider().getPageContentSize(position);
     }
+
+    protected abstract PageContentProvider getPageContentProvider();
+
+    protected abstract FitMode getFitMode();
+
+    protected abstract BackgroundTaskListener getBackgroundTaskListener();
+
+    protected abstract BitmapPostProcessor[] getBitmapPostProcessors();
 }

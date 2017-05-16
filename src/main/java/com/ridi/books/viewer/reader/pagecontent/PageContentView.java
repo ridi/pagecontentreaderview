@@ -226,8 +226,9 @@ class PageContentView extends ViewGroup {
             Rect hqArea = new Rect(0, 0, canvasSize.width, canvasSize.height);
 
             // Intersect and test that there is an intersection
-            if (!hqArea.intersect(viewArea))
+            if (!hqArea.intersect(viewArea)) {
                 return;
+            }
 
             // Offset patch area to be relative to the view top left
             hqArea.offset(-viewArea.left, -viewArea.top);

@@ -32,7 +32,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
         PageContentView view;
         if (convertView == null) {
             view = new PageContentView(context, parent.getWidth(), parent.getHeight(),
-                    getFitMode(), getBackgroundTaskListener(), getBitmapPostProcessor());
+                    getFitPolicy(), getBackgroundTaskListener(), getBitmapPostProcessor());
         } else {
             view = (PageContentView) convertView;
         }
@@ -46,7 +46,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
 
     protected abstract PageContentProvider getPageContentProvider();
 
-    protected abstract FitMode getFitMode();
+    protected abstract FitPolicy getFitPolicy();
 
     protected abstract BackgroundTaskListener getBackgroundTaskListener();
 

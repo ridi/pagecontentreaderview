@@ -409,7 +409,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             long current = -view.getTop(), total = 0L;
             for (int i = 0; i < count; i++) {
                 SizeF contentSize = adapter.getPageContentSize(i);
-                float scale = adapter.getFitMode().calculateScale(contentSize, getWidth(), getHeight());
+                float scale = adapter.getFitPolicy().calculateScale(getWidth(), getHeight(), contentSize);
                 float height = contentSize.height * scale * this.scale + pageGapPixels * this.scale;
                 total += height;
                 if (i < currentIndex) {

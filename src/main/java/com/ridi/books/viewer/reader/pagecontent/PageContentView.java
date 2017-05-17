@@ -11,7 +11,7 @@ import android.widget.ImageView;
 
 class PageContentView extends ViewGroup {
     private Size canvasSize;
-    private FitMode fitMode;
+    private FitPolicy fitPolicy;
     private BackgroundTaskListener backgroundTaskListener;
 
     private Size size;
@@ -29,11 +29,11 @@ class PageContentView extends ViewGroup {
     private boolean rendered;
 
     PageContentView(Context context, int canvasWidth, int canvasHeight,
-                    FitMode fitMode, BackgroundTaskListener backgroundTaskListener,
+                    FitPolicy fitPolicy, BackgroundTaskListener backgroundTaskListener,
                     BitmapPostProcessor postProcessor) {
         this(context, null, 0);
         this.canvasSize = new Size(canvasWidth, canvasHeight);
-        this.fitMode = fitMode;
+        this.fitPolicy = fitPolicy;
         this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessor = postProcessor;
 
@@ -175,7 +175,7 @@ class PageContentView extends ViewGroup {
         // Calculate scaled size that fits within the screen limits
         // This is the size at minimum zoom
         SizeF contentSize = this.pageContent.getSize();
-        float scale = fitMode.calculateScale(contentSize, canvasSize.width, canvasSize.height);
+        float scale = fitPolicy.calculateScale(canvasSize.width, canvasSize.height, contentSize);
         size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         // Render the page in the background

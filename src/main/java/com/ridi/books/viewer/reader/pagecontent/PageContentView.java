@@ -38,7 +38,7 @@ class PageContentView extends ViewGroup {
         this.postProcessor = postProcessor;
 
         entireView = new ImageView(context);
-        entireView.setBackgroundColor(Color.WHITE);
+        entireView.setBackgroundColor(Color.TRANSPARENT);
         entireView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         addView(entireView);
     }
@@ -71,6 +71,7 @@ class PageContentView extends ViewGroup {
         }
         
         entireView.setImageBitmap(null);
+        entireView.setBackgroundColor(Color.TRANSPARENT);
         hideHqViewIfExists();
     }
     
@@ -202,6 +203,7 @@ class PageContentView extends ViewGroup {
             protected void onPostExecute(Bitmap result) {
                 onCompleteBackgroundTask();
                 entireView.setImageBitmap(result);
+                entireView.setBackgroundColor(Color.WHITE);
                 rendered = true;
                 invalidate();
             }

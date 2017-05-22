@@ -9,23 +9,10 @@ import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-public class PageContentView extends ViewGroup {
-    public interface Listener {
-        void onStartBackgroundTask();
-        void onCompleteBackgroundTask();
-    }
-
-    public interface BitmapPostProcessor {
-        Bitmap process(Bitmap src);
-    }
-
-    public enum ScaleMode {
-        AUTO, WIDTH, HEIGHT
-    }
-    
+class PageContentView extends ViewGroup {
     private Size canvasSize;
-    private ScaleMode scaleMode;
-    private Listener listener;
+    private FitPolicy fitPolicy;
+    private BackgroundTaskListener backgroundTaskListener;
 
     private Size size;
     
@@ -37,21 +24,21 @@ public class PageContentView extends ViewGroup {
     private ImageView hqView;  // high quality view
     private AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
     private HighQualityInfo hqInfo;
-    private BitmapPostProcessor[] postProcessors;
+    private BitmapPostProcessor postProcessor;
     
     private boolean rendered;
 
-    public PageContentView(Context context, Size canvasSize, ScaleMode scaleMode,
-                           Listener listener, BitmapPostProcessor... postProcessors) {
+    PageContentView(Context context, int canvasWidth, int canvasHeight,
+                    FitPolicy fitPolicy, BackgroundTaskListener backgroundTaskListener,
+                    BitmapPostProcessor postProcessor) {
         this(context, null, 0);
-
-        this.canvasSize = canvasSize;
-        this.scaleMode = scaleMode;
-        this.listener = listener;
-        this.postProcessors = postProcessors;
+        this.canvasSize = new Size(canvasWidth, canvasHeight);
+        this.fitPolicy = fitPolicy;
+        this.backgroundTaskListener = backgroundTaskListener;
+        this.postProcessor = postProcessor;
 
         entireView = new ImageView(context);
-        entireView.setBackgroundColor(Color.WHITE);
+        entireView.setBackgroundColor(Color.TRANSPARENT);
         entireView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         addView(entireView);
     }
@@ -84,18 +71,19 @@ public class PageContentView extends ViewGroup {
         }
         
         entireView.setImageBitmap(null);
+        entireView.setBackgroundColor(Color.TRANSPARENT);
         hideHqViewIfExists();
     }
     
     private void onStartBackgroundTask() {
-        if (listener != null) {
-            listener.onStartBackgroundTask();
+        if (backgroundTaskListener != null) {
+            backgroundTaskListener.onStartBackgroundTask();
         }
     }
     
     private void onCompleteBackgroundTask() {
-        if (listener != null) {
-            listener.onCompleteBackgroundTask();
+        if (backgroundTaskListener != null) {
+            backgroundTaskListener.onCompleteBackgroundTask();
         }
     }
     
@@ -108,6 +96,8 @@ public class PageContentView extends ViewGroup {
                 width = size.width;
                 break;
             default:
+            case MeasureSpec.AT_MOST:
+            case MeasureSpec.EXACTLY:
                 width = MeasureSpec.getSize(widthMeasureSpec);
         }
         switch(MeasureSpec.getMode(heightMeasureSpec)) {
@@ -115,6 +105,8 @@ public class PageContentView extends ViewGroup {
                 height = size.height;
                 break;
             default:
+            case MeasureSpec.AT_MOST:
+            case MeasureSpec.EXACTLY:
                 height = MeasureSpec.getSize(heightMeasureSpec);
         }
         
@@ -183,23 +175,9 @@ public class PageContentView extends ViewGroup {
         
         // Calculate scaled size that fits within the screen limits
         // This is the size at minimum zoom
-        float pageWidth = this.pageContent.getWidth();
-        float pageHeight = this.pageContent.getHeight();
-        
-        float scale;
-        switch (scaleMode) {
-            case WIDTH:
-                scale = canvasSize.width / pageWidth;
-                break;
-            case HEIGHT:
-                scale = canvasSize.height / pageHeight;
-                break;
-            default:
-            case AUTO:
-                scale = Math.min(canvasSize.width / pageWidth, canvasSize.height / pageHeight);
-                break;
-        }
-        size = new Size((int) (pageWidth * scale), (int) (pageHeight * scale));
+        SizeF contentSize = this.pageContent.getSize();
+        float scale = fitPolicy.calculateScale(canvasSize.width, canvasSize.height, contentSize);
+        size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         // Render the page in the background
         entireRenderingTask = new AsyncRenderingTask<Void, Void, Bitmap>() {
@@ -213,9 +191,9 @@ public class PageContentView extends ViewGroup {
                 PageContent pageContent = PageContentView.this.pageContent;
 
                 if (pageContent != null) {
-                    Bitmap bitmap = pageContent.renderToBitmap(size.width, size.height,
-                            0, 0, size.width, size.height, false);
-                    return applyPostProcessors(bitmap);
+                    Bitmap bitmap = pageContent.renderToBitmap(
+                            size.width, size.height, 0, 0, size.width, size.height, false);
+                    return applyPostProcessor(bitmap);
                 } else {
                     return null;
                 }
@@ -225,6 +203,7 @@ public class PageContentView extends ViewGroup {
             protected void onPostExecute(Bitmap result) {
                 onCompleteBackgroundTask();
                 entireView.setImageBitmap(result);
+                entireView.setBackgroundColor(Color.WHITE);
                 rendered = true;
                 invalidate();
             }
@@ -249,8 +228,9 @@ public class PageContentView extends ViewGroup {
             Rect hqArea = new Rect(0, 0, canvasSize.width, canvasSize.height);
 
             // Intersect and test that there is an intersection
-            if (!hqArea.intersect(viewArea))
+            if (!hqArea.intersect(viewArea)) {
                 return;
+            }
 
             // Offset patch area to be relative to the view top left
             hqArea.offset(-viewArea.left, -viewArea.top);
@@ -295,7 +275,7 @@ public class PageContentView extends ViewGroup {
 
                         Bitmap bitmap = pageContent.renderToBitmap(bitmapWidth, bitmapHeight,
                                 startX, startY, pageWidth, pageHeight, true);
-                        info.bitmap = applyPostProcessors(bitmap);
+                        info.bitmap = applyPostProcessor(bitmap);
                     }
 
                     return info;
@@ -356,6 +336,14 @@ public class PageContentView extends ViewGroup {
             this.width = width;
             this.height = height;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Size size = (Size) obj;
+            return width == size.width && height == size.height;
+        }
     }
     
     private static class HighQualityInfo {
@@ -370,13 +358,9 @@ public class PageContentView extends ViewGroup {
     }
 
     private abstract class AsyncRenderingTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
-        protected Bitmap applyPostProcessors(Bitmap bitmap) {
-            for (BitmapPostProcessor processor : postProcessors) {
-                if (bitmap == null) {
-                    break;
-                }
-
-                Bitmap processed = processor.process(bitmap);
+        protected Bitmap applyPostProcessor(Bitmap bitmap) {
+            if (postProcessor != null) {
+                Bitmap processed = postProcessor.process(bitmap);
                 if (processed != bitmap) {
                     bitmap.recycle();
                     bitmap = processed;

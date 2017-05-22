@@ -1,6 +1,7 @@
 package com.ridi.books.viewer.reader.pagecontent;
 
 import android.content.Context;
+import android.database.DataSetObserver;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -19,7 +20,6 @@ import android.widget.Scroller;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                            implements GestureDetector.OnGestureListener,
@@ -36,14 +36,19 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private static final int SCROLLBAR_MIN_THUMB_SIZE           = 5;
     private static final int SCROLLBAR_STROKE_WIDTH             = 8;
     private static final int SCROLLBAR_COLOR                    = 0x88808080;
-
-    private static final int GAP_DP                             = 5;
     
     private static final int MOVING_DIAGONALLY                  = 0;
     private static final int MOVING_UP                          = 1;
     private static final int MOVING_RIGHT                       = 2;
     private static final int MOVING_DOWN                        = 3;
     private static final int MOVING_LEFT                        = 4;
+
+    private static final Paint SCROLLBAR_PAINT;
+    static {
+        SCROLLBAR_PAINT = new Paint();
+        SCROLLBAR_PAINT.setColor(SCROLLBAR_COLOR);
+        SCROLLBAR_PAINT.setStrokeWidth(SCROLLBAR_STROKE_WIDTH);
+    }
     
     public interface Listener {
         void onViewModeChanged();
@@ -56,6 +61,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
 
     private PageContentViewAdapter adapter;
+    private DataSetObserver dataSetObserver = new DataSetObserver() {
+        @Override
+        public void onChanged() {
+            refresh();
+        }
+    };
     private int currentIndex;  // Adapter's index for the current view
     private boolean resetLayout;
     private SparseArray<PageContentView> childViews;
@@ -70,6 +81,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     private GestureDetector gestureDetector;
     private ScaleGestureDetector scaleGestureDetector;
+    private int pageGapPixels;
     private float scale;
     private boolean scaling;
     private boolean doubleTapScalingEnabled;
@@ -107,8 +119,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        clearViewCache();
-        notifyAdapterChanged();
+        refresh();
     }
 
     public void setListener(Listener listener) {
@@ -171,6 +182,11 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     public void setDoubleTapScalingEnabled(boolean doubleTapScalingEnabled) {
         this.doubleTapScalingEnabled = doubleTapScalingEnabled;
         gestureDetector.setOnDoubleTapListener(doubleTapScalingEnabled ? this : null);
+    }
+
+    public void setPageGapPixels(int pageGapPixels) {
+        this.pageGapPixels = pageGapPixels;
+        requestLayout();
     }
 
     public void setCurrentIndex(int index) {
@@ -249,7 +265,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     private Point subScreenSizeOffset(View view) {
         return new Point(Math.max((getWidth() - view.getMeasuredWidth()) / 2, 0),
-                         Math.max((getHeight() - view.getMeasuredHeight()) / 2, 0));
+                scrollMode ? 0 : Math.max((getHeight() - view.getMeasuredHeight()) / 2, 0));
     }
     
     private View getCached() {
@@ -295,8 +311,16 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
 
         // In either dimension, if view smaller than screen then
         // constrain it to be central
-        if (xMin > xMax) xMin = xMax = (xMin + xMax) / 2;
-        if (yMin > yMax) yMin = yMax = (yMin + yMax) / 2;
+        if (xMin > xMax) {
+            xMin = xMax = (xMin + xMax) / 2;
+        }
+        if (yMin > yMax) {
+            if (scrollMode) {
+                yMin = yMax = 0;
+            } else {
+                yMin = yMax = (yMin + yMax) / 2;
+            }
+        }
 
         return new Rect(xMin, yMin, xMax, yMax);
     }
@@ -342,7 +366,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                     // The layout is stable
                     PageContentView cv = null;
                     
-                    for (int i = 0 ; i < childViews.size() ; i++) {
+                    for (int i = 0; i < childViews.size(); i++) {
                         int index = childViews.keyAt(i);
                         PageContentView view = childViews.get(index);
                         
@@ -371,10 +395,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     protected void dispatchDraw(Canvas canvas) {
         super.dispatchDraw(canvas);
-        
-        if (adapter.getCount() > 0) {
-           drawScrollBars(canvas);
-        }
+        drawScrollBars(canvas);
     }
     
     private void drawScrollBars(Canvas canvas) {
@@ -382,90 +403,71 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         if (view == null || view.getMeasuredWidth() == 0 || view.getMeasuredHeight() == 0) {
             return;
         }
-        
-        Point offset = subScreenSizeOffset(view);
+
         int count = adapter.getCount();
-        
-        Paint paint = new Paint();
-        paint.setColor(SCROLLBAR_COLOR);
-        paint.setStrokeWidth(SCROLLBAR_STROKE_WIDTH);
-        
         if (scrollMode && count > 1) {
-            int prevCount = reverseMode ? count - currentIndex - 1 : currentIndex;
-            int gap = dipToPixel(GAP_DP);
-            
-            if (isScrollMode()) {
-                int total = (int) (offset.y * 2 + view.getMeasuredHeight() * count + gap * scale * (count - 1));
-                int current = (int) (offset.y + prevCount * (view.getMeasuredHeight() + gap * scale) - view.getTop());
-
-                float size = (float) getHeight() * getHeight() / total;
-                if (size < SCROLLBAR_MIN_THUMB_SIZE) {
-                    size = SCROLLBAR_MIN_THUMB_SIZE;
-                    total = (int) ((total - getHeight()) + total * size / getHeight());
+            long current = -view.getTop(), total = 0L;
+            for (int i = 0; i < count; i++) {
+                SizeF contentSize = adapter.getPageContentSize(i);
+                float scale = adapter.getFitPolicy().calculateScale(getWidth(), getHeight(), contentSize);
+                float height = contentSize.height * scale * this.scale + pageGapPixels * this.scale;
+                total += height;
+                if (i < currentIndex) {
+                    current += height;
                 }
-                float position = (float) getHeight() * current / total;
-
-                drawVerticalScrollBar(canvas, paint, position, size);
-            } else {
-                int total = (int) (offset.x * 2 + view.getMeasuredWidth() * count + gap * scale * (count - 1));
-                int current = (int) (offset.x + prevCount * (view.getMeasuredWidth() + gap * scale) - view.getLeft());
-
-                float size = (float) getWidth() * getWidth() / total;
-                if (size < SCROLLBAR_MIN_THUMB_SIZE) {
-                    size = SCROLLBAR_MIN_THUMB_SIZE;
-                    total = (int) ((total - getWidth()) + total * size / getWidth());
-                }
-                float position = (float) getWidth() * current / total;
-
-                drawHorizontalScrollBar(canvas, paint, position, size);
             }
-        }
-        
-        if (!scrollMode || count == 1) {
+
+            float size = (float) getHeight() * getHeight() / total;
+            if (size < SCROLLBAR_MIN_THUMB_SIZE) {
+                size = SCROLLBAR_MIN_THUMB_SIZE;
+                total = (int) ((total - getHeight()) + total * size / getHeight());
+            }
+            float position = (float) getHeight() * current / total;
+            drawVerticalScrollBar(canvas, position, size);
+        } else if (!scrollMode || count == 1) {
             if (view.getMeasuredHeight() > getHeight()) {
                 float position = (float) getHeight() * -view.getTop() / view.getMeasuredHeight();
                 float size = (float) getHeight() * getHeight() / view.getMeasuredHeight();
-                
-                drawVerticalScrollBar(canvas, paint, position, size);
+                drawVerticalScrollBar(canvas, position, size);
             }
             if (view.getMeasuredWidth() > getWidth()) {
                 float position = (float) getWidth() * -view.getLeft() / view.getMeasuredWidth();
                 float size = (float) getWidth() * getWidth() / view.getMeasuredWidth();
-
-                drawHorizontalScrollBar(canvas, paint, position, size);
+                drawHorizontalScrollBar(canvas,  position, size);
             }
         }
     }
     
-    private void drawHorizontalScrollBar(Canvas canvas, Paint paint, float position, float size) {
+    private void drawHorizontalScrollBar(Canvas canvas, float position, float size) {
         if (position < 0) {
             size += position;
             position = 0;
-        }
-        else if (position + size > getWidth()) {
+        } else if (position + size > getWidth()) {
             size -= position + size - getWidth();
         }
         
-        canvas.drawRoundRect(new RectF(position, getHeight() - SCROLLBAR_STROKE_WIDTH, position + size, getHeight()), 4, 2, paint);
+        canvas.drawRoundRect(new RectF(
+                position, getHeight() - SCROLLBAR_STROKE_WIDTH, position + size, getHeight()),
+                4, 2, SCROLLBAR_PAINT);
     }
     
-    private void drawVerticalScrollBar(Canvas canvas, Paint paint, float position, float size) {
+    private void drawVerticalScrollBar(Canvas canvas, float position, float size) {
         if (position < 0) {
             size += position;
             position = 0;
-        }                           
-        else if (position + size > getHeight()) {
+        } else if (position + size > getHeight()) {
             size -= position + size - getHeight();
         }
         
-        canvas.drawRoundRect(new RectF(getWidth() - SCROLLBAR_STROKE_WIDTH, position, getWidth(), position + size), 2, 4, paint);
+        canvas.drawRoundRect(new RectF(
+                getWidth() - SCROLLBAR_STROKE_WIDTH, position, getWidth(), position + size),
+                2, 4, SCROLLBAR_PAINT);
     }
     
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        
-        for (int i = 0 ; i < childViews.size() ; i++) {
+        for (int i = 0; i < childViews.size(); i++) {
             measureView(childViews.valueAt(i));
         }
     }
@@ -486,31 +488,26 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         if (!resetLayout) {
             // Move to next or previous if current is sufficiently off center
             if (cv != null && scrollMode && !sliding) {
-                int gap = dipToPixel(GAP_DP);
                 cvOffset = subScreenSizeOffset(cv);
-                if (cv.getTop() + cv.getMeasuredHeight() + cvOffset.y + gap * scale / 2 + scrollOffsetY < getHeight() / 2) {
+                if (cv.getTop() + cv.getMeasuredHeight() + cvOffset.y
+                        + pageGapPixels * scale / 2 + scrollOffsetY < getHeight() / 2) {
                     setCurrentIndexToRightOrDown();
                 }
-                if (cv.getTop() - cvOffset.y - gap * scale / 2 + scrollOffsetY >= getHeight() / 2) {
+                if (cv.getTop() - cvOffset.y
+                        - pageGapPixels * scale / 2 + scrollOffsetY >= getHeight() / 2) {
                     setCurrentIndexToLeftOrUp();
                 }
             }
             
             // Remove not needed children and hold them for reuse
-            int numChildren = childViews.size();
-            int childIndices[] = new int[numChildren];
-            for (int i = 0; i < numChildren; i++) {
-                childIndices[i] = childViews.keyAt(i);
-            }
-
-            for (int i = 0; i < numChildren; i++) {
-                int ai = childIndices[i];
-                if (ai < currentIndex - 1 || ai > currentIndex + 1) {
-                    PageContentView v = childViews.get(ai);
+            for (int i = childViews.size() - 1; i >= 0; i--) {
+                int index = childViews.keyAt(i);
+                if (index < currentIndex - 1 || index > currentIndex + 1) {
+                    PageContentView v = childViews.get(index);
                     v.clear();
                     viewCache.add(v);
                     removeViewInLayout(v);
-                    childViews.remove(ai);
+                    childViews.remove(index);
                 }
             }
         } else {
@@ -631,7 +628,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             cvTop    += corr.y;
             cvBottom += corr.y;
         } else if (!scaling && cv.getMeasuredWidth() <= getWidth() && scrollMode) {
-            // When the current view is as small as the screen in widthi, clamp
+            // When the current view is as small as the screen in width, clamp
             // it horizontally
             Point corr = getCorrection(getScrollBounds(cvLeft, cvTop, cvRight, cvBottom));
             cvLeft   += corr.x;
@@ -640,13 +637,11 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         
         cv.layout(cvLeft, cvTop, cvRight, cvBottom);
 
-        int gap = dipToPixel(GAP_DP);
-
         if (isLeftOrUpIndexAvailable()) {
             View lv = getOrCreateChild(reverseMode ? currentIndex + 1 : currentIndex - 1);
             Point leftOffset = subScreenSizeOffset(lv);
             
-            int margin = (int) (gap * scale);
+            int margin = (int) (pageGapPixels * scale);
             int lvLeft, lvTop, lvRight, lvBottom;
             
             if (scrollMode) {
@@ -659,12 +654,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 }
 
                 if (!scrollMode) {
-                    margin = leftOffset.y + gap + cvOffset.y;
+                    margin = leftOffset.y + pageGapPixels + cvOffset.y;
                 }
                 lvBottom = cvTop - margin;
                 if (!scrollMode && scaling) {
                     if (lvBottom > 0) {
-                        lvBottom = -gap - leftOffset.y;
+                        lvBottom = -pageGapPixels - leftOffset.y;
                     }
                 }
                 lvTop = lvBottom - lv.getMeasuredHeight();
@@ -678,12 +673,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 }
 
                 if (!scrollMode) {
-                    margin = leftOffset.x + gap + cvOffset.x;
+                    margin = leftOffset.x + pageGapPixels + cvOffset.x;
                 }
                 lvRight = cvLeft - margin;
                 if (!scrollMode && scaling) {
                     if (lvRight > 0) {
-                        lvRight = -gap - leftOffset.x;
+                        lvRight = -pageGapPixels - leftOffset.x;
                     }
                 }
                 lvLeft = lvRight - lv.getMeasuredWidth();
@@ -696,7 +691,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             View rv = getOrCreateChild(reverseMode ? currentIndex - 1 : currentIndex + 1);
             Point rightOffset = subScreenSizeOffset(rv);
             
-            int margin = (int) (gap * scale);
+            int margin = (int) (pageGapPixels * scale);
             int rvLeft, rvTop, rvRight, rvBottom;
             
             if (scrollMode) {
@@ -709,12 +704,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 }
 
                 if (!scrollMode) {
-                    margin = cvOffset.y + gap + rightOffset.y;
+                    margin = cvOffset.y + pageGapPixels + rightOffset.y;
                 }
                 rvTop = cvBottom + margin;
                 if (!scrollMode && scaling) {
                     if (rvTop < getHeight()) {
-                        rvTop = getHeight() + gap + rightOffset.y;
+                        rvTop = getHeight() + pageGapPixels + rightOffset.y;
                     }
                 }
                 rvBottom = rvTop + rv.getMeasuredHeight();
@@ -728,12 +723,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 }
 
                 if (!scrollMode) {
-                    margin = cvOffset.x + gap + rightOffset.x;
+                    margin = cvOffset.x + pageGapPixels + rightOffset.x;
                 }
                 rvLeft = cvRight + margin;
                 if (!scrollMode && scaling) {
                     if (rvLeft < getWidth()) {
-                        rvLeft = getWidth() + gap + rightOffset.x;
+                        rvLeft = getWidth() + pageGapPixels + rightOffset.x;
                     }
                 }
                 rvRight = rvLeft + rv.getMeasuredWidth();
@@ -769,9 +764,9 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 
                 if (view != null && !scaling) {
                     Point cvOffset = subScreenSizeOffset(view);
-                    int gap = dipToPixel(GAP_DP);
 
-                    int right = view.getLeft() + view.getMeasuredWidth() + cvOffset.x + gap / 2 + scrollOffsetX;
+                    int right = view.getLeft() + view.getMeasuredWidth()
+                            + cvOffset.x + pageGapPixels / 2 + scrollOffsetX;
                     if (right < getWidth()) {
                         if (!isRightOrDownIndexAvailable()) {
                             tryOverFirst = reverseMode;
@@ -781,7 +776,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                         }
                     }
 
-                    int left = view.getLeft() - cvOffset.x - gap / 2 + scrollOffsetX;
+                    int left = view.getLeft() - cvOffset.x - pageGapPixels / 2 + scrollOffsetX;
                     if (left > 0) {
                         if (!isLeftOrUpIndexAvailable()) {
                             tryOverFirst = !reverseMode;
@@ -818,7 +813,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     private void settleOrUnsettleViews() {
         List<PageContentView> toBeSettled = new ArrayList<>();
-        for (int i = 0 ; i < childViews.size(); i++) {
+        for (int i = 0; i < childViews.size(); i++) {
             PageContentView view = childViews.valueAt(i);
             Rect rect = new Rect(view.getLeft(), view.getTop(),
                                  view.getRight(), view.getBottom());
@@ -842,12 +837,17 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
 
     @Override
     public void setAdapter(PageContentViewAdapter adapter) {
+        if (this.adapter != null) {
+            this.adapter.unregisterDataSetObserver(dataSetObserver);
+        }
         this.adapter = adapter;
-        notifyAdapterChanged();
+        refresh();
+        adapter.registerDataSetObserver(dataSetObserver);
     }
     
-    public void notifyAdapterChanged() {
+    private void refresh() {
         childViews.clear();
+        viewCache.clear();
         removeAllViewsInLayout();
         scale = DEFAULT_SCALE;
         resetLayout = true;
@@ -877,14 +877,15 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         }
     }
 
-    private boolean withinBoundsInDirectionOfTravel(Rect bounds, float deltaX, float deltaY, float velocityX, float velocityY) {
+    private boolean withinBoundsInDirectionOfTravel(
+            Rect bounds, float deltaX, float deltaY, float velocityX, float velocityY) {
         switch (directionOfTravel(deltaX, deltaY, velocityX, velocityY)) {
             case MOVING_DIAGONALLY: return bounds.contains(0, 0);
             case MOVING_LEFT:       return bounds.left <= 0;
             case MOVING_RIGHT:      return bounds.right >= 0;
             case MOVING_UP:         return bounds.top <= 0;
             case MOVING_DOWN:       return bounds.bottom >= 0;
-            default: throw new NoSuchElementException();
+            default: throw new IllegalStateException();
         }
     }
     
@@ -1246,16 +1247,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
     
     public void destroy() {
-        for (int i = 0 ; i < childViews.size() ; i++) {
+        for (int i = 0; i < childViews.size(); i++) {
             PageContentView view = childViews.valueAt(i);
             view.clear();
         }
         
         childViews.clear();
-        clearViewCache();
-    }
-
-    public void clearViewCache() {
         viewCache.clear();
     }
 

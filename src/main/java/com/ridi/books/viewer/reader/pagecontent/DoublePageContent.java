@@ -3,73 +3,34 @@ package com.ridi.books.viewer.reader.pagecontent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.support.annotation.WorkerThread;
 
 public class DoublePageContent implements PageContent {
-    private PageContent leftPage;
-    private PageContent rightPage;
-
-    @WorkerThread
-    public static PageContent getPageContent(PageContentProvider singleProvider,
-                                             int leftIndex, int rightIndex, boolean useDummyContent) {
-        PageContent leftPage = null, rightPage = null;
-        
-        if (leftIndex >= 0 && leftIndex < singleProvider.getPageContentCount()) {
-            leftPage = singleProvider.getPageContent(leftIndex);
-            if (leftPage == null) {
-                return null;
-            }
-        }
-        
-        if (rightIndex >= 0 && rightIndex < singleProvider.getPageContentCount()) {
-            rightPage = singleProvider.getPageContent(rightIndex);
-            if (rightPage == null) {
-                return null;
-            }
-        }
-        
-        if (leftPage == null && rightPage == null) {
-            return null;
-        } else if (leftPage == null) {
-            if (useDummyContent) {
-                leftPage = new DummyPageContent(rightPage);
-            } else {
-                return rightPage;
-            }
-        } else if (rightPage == null) {
-            if (useDummyContent) {
-                rightPage = new DummyPageContent(leftPage);
-            } else {
-                return leftPage;
-            }
-        }
-
-        return new DoublePageContent(leftPage, rightPage);
-    }
+    private final PageContent leftPage;
+    private final PageContent rightPage;
+    private final SizeF size;
     
-    private DoublePageContent(PageContent leftPage, PageContent rightPage) {
+    DoublePageContent(PageContent leftPage, PageContent rightPage) {
         this.leftPage = leftPage;
         this.rightPage = rightPage;
+        this.size = getSize(leftPage.getSize(), rightPage.getSize());
     }
 
     @Override
-    public float getWidth() {
-        return Math.max(leftPage.getWidth(), rightPage.getWidth()) * 2;
-    }
-
-    @Override
-    public float getHeight() {
-        return Math.max(leftPage.getHeight(), rightPage.getHeight());
+    public SizeF getSize() {
+        return size;
     }
 
     @Override
     public Bitmap renderToBitmap(int bitmapWidth, int bitmapHeight, int startX, int startY,
                                  int pageWidth, int pageHeight, boolean forHighQuality) {
+        SizeF leftSize = leftPage.getSize();
+        SizeF rightSize = rightPage.getSize();
+
         Bitmap leftBitmap = null, rightBitmap = null;
 
-        int leftPageWidth = (int) (pageWidth * leftPage.getWidth() / getWidth());
+        int leftPageWidth = (int) ((float) pageWidth * leftSize.width / size.width);
         int leftBmWidth = Math.min(bitmapWidth, leftPageWidth - (-startX));
-        int leftPageHeight = (int) (pageHeight * leftPage.getHeight() / getHeight());
+        int leftPageHeight = (int) ((float) pageHeight * leftSize.height / size.height);
         int leftBmHeight = bitmapHeight;
 
         // 필요한만큼만 확보
@@ -81,14 +42,10 @@ public class DoublePageContent implements PageContent {
             leftBitmap = leftPage.renderToBitmap(leftBmWidth, leftBmHeight,
                     startX, startY, leftPageWidth, leftPageHeight, forHighQuality);
         }
-        
-        if (rightPage == null) {
-            return leftBitmap;
-        }
 
-        int rightPageWidth = (int) (pageWidth * rightPage.getWidth() / getWidth());
+        int rightPageWidth = (int) ((float) pageWidth * rightSize.width / size.width);
         int rightBmWidth = Math.min(bitmapWidth - leftBmWidth, rightPageWidth);
-        int rightPageHeight = (int) (pageHeight * rightPage.getHeight() / getHeight());
+        int rightPageHeight = (int) ((float) pageHeight * rightSize.height / size.height);
         int rightBmHeight = bitmapHeight;
 
         // 필요한만큼만 확보
@@ -132,5 +89,10 @@ public class DoublePageContent implements PageContent {
         int rightBitmapConfigOrdinal = rightBitmap != null ? rightBitmap.getConfig().ordinal() : -1;
         int preferredBitmapConfigOrdinal = Math.max(leftBitmapConfigOrdinal, rightBitmapConfigOrdinal);
         return Bitmap.Config.values()[preferredBitmapConfigOrdinal];
+    }
+
+    static SizeF getSize(SizeF leftSize, SizeF rightSize) {
+        return new SizeF(Math.max(leftSize.width, rightSize.width) * 2,
+                Math.max(leftSize.height, rightSize.height));
     }
 }

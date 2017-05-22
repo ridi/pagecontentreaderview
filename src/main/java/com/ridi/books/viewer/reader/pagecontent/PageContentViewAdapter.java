@@ -1,25 +1,20 @@
 package com.ridi.books.viewer.reader.pagecontent;
 
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
-public class PageContentViewAdapter extends BaseAdapter {
-    private PageContentProvider provider;
-    private PageContentViewFactory viewFactory;
+public abstract class PageContentViewAdapter extends BaseAdapter {
+    private final Context context;
     
-    public PageContentViewAdapter(PageContentProvider provider, PageContentViewFactory viewFactory) {
-        this.provider = provider;
-        this.viewFactory = viewFactory;
+    public PageContentViewAdapter(Context context) {
+        this.context = context;
     }
-    
-    public void setPageContentProvider(PageContentProvider provider) {
-        this.provider = provider;
-    }
-    
+
     @Override
     public int getCount() {
-        return provider.getPageContentCount();
+        return getPageContentProvider().getPageContentCount();
     }
     
     @Override
@@ -35,20 +30,25 @@ public class PageContentViewAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         PageContentView view;
-        
         if (convertView == null) {
-            view = viewFactory.createContentView(
-                    new PageContentView.Size(parent.getWidth(), parent.getHeight()));
+            view = new PageContentView(context, parent.getWidth(), parent.getHeight(),
+                    getFitPolicy(), getBackgroundTaskListener(), getBitmapPostProcessor());
         } else {
             view = (PageContentView) convertView;
         }
-        
-        view.loadPageContent(provider, position);
-        
+        view.loadPageContent(getPageContentProvider(), position);
         return view;
     }
-    
-    public interface PageContentViewFactory {
-        PageContentView createContentView(PageContentView.Size canvasSize);
+
+    SizeF getPageContentSize(int position) {
+        return getPageContentProvider().getPageContentSize(position);
     }
+
+    protected abstract PageContentProvider getPageContentProvider();
+
+    protected abstract FitPolicy getFitPolicy();
+
+    protected abstract BackgroundTaskListener getBackgroundTaskListener();
+
+    protected abstract BitmapPostProcessor getBitmapPostProcessor();
 }

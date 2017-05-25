@@ -8,6 +8,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.util.Pair;
 import android.util.SparseArray;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -76,6 +77,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private boolean reverseMode;
     private boolean slidingEnabled;
 
+    private Pair<Integer, Integer> touchStartOffset;
     private boolean keepScrollOffsetEnabled;
     private Point keptScrollOffset;
     
@@ -477,7 +479,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         
-        PageContentView cv = childViews.get(currentIndex);
+        View cv = childViews.get(currentIndex);
         Point cvOffset;
 
         if (requestedScale != DEFAULT_SCALE) {
@@ -743,8 +745,15 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         scaleGestureDetector.onTouchEvent(event);
-        
+
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            PageContentView view = childViews.get(currentIndex);
+            if (view != null) {
+                touchStartOffset = new Pair<>(view.getLeft(), view.getRight());
+            }
+        }
         if (gestureDetector.onTouchEvent(event)) {
+            touchStartOffset = null;
             return true;
         }
         
@@ -759,15 +768,14 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 }
             } else {
                 userInteracting = false;
-                
+
                 PageContentView view = childViews.get(currentIndex);
-                
                 if (view != null && !scaling) {
                     Point cvOffset = subScreenSizeOffset(view);
 
                     int right = view.getLeft() + view.getMeasuredWidth()
                             + cvOffset.x + pageGapPixels / 2 + scrollOffsetX;
-                    if (right < getWidth()) {
+                    if (isViewingNextPageByGestureAvailable() && right < getWidth()) {
                         if (!isRightOrDownIndexAvailable()) {
                             tryOverFirst = reverseMode;
                             tryOverLast = !reverseMode;
@@ -777,7 +785,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                     }
 
                     int left = view.getLeft() - cvOffset.x - pageGapPixels / 2 + scrollOffsetX;
-                    if (left > 0) {
+                    if (isViewingPrevPageByGestureAvailable() && left > 0) {
                         if (!isLeftOrUpIndexAvailable()) {
                             tryOverFirst = !reverseMode;
                             tryOverLast = reverseMode;
@@ -804,6 +812,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                     }
                 }
             }
+            touchStartOffset = null;
         }
         
         requestLayout();
@@ -941,6 +950,16 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     public void onLongPress(MotionEvent e) {
     }
+
+    private boolean isViewingPrevPageByGestureAvailable() {
+        return scale == DEFAULT_SCALE
+                || (touchStartOffset != null && touchStartOffset.first == 0);
+    }
+
+    private boolean isViewingNextPageByGestureAvailable() {
+        return scale == DEFAULT_SCALE
+                || (touchStartOffset != null && touchStartOffset.second == getWidth());
+    }
     
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
@@ -972,41 +991,23 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         float deltaX = e2.getX() - e1.getX();
         float deltaY = e2.getY() - e1.getY();
         int direction = directionOfTravel(deltaX, deltaY, velocityX, velocityY);
-        
-        if (scrollMode) {
-            switch (direction) {
-                case MOVING_UP:
-                    if (bounds.top >= 0) {
+        switch (direction) {
+            case MOVING_LEFT:
+                if (bounds.left >= 0) {
+                    if (!shouldKeepScrollOffset() && isViewingNextPageByGestureAvailable()) {
                         viewRightOrDown();
                         return true;
                     }
-                    break;
-                case MOVING_DOWN:
-                    if (bounds.bottom <= 0) {
+                }
+                break;
+            case MOVING_RIGHT:
+                if (bounds.right <= 0) {
+                    if (!shouldKeepScrollOffset() && isViewingPrevPageByGestureAvailable()) {
                         viewLeftOrUp();
                         return true;
                     }
-                    break;
-            }
-        } else {
-            switch (direction) {
-                case MOVING_LEFT:
-                    if (bounds.left >= 0) {
-                        if (!shouldKeepScrollOffset()) {
-                            viewRightOrDown();
-                        }
-                        return true;
-                    }
-                    break;
-                case MOVING_RIGHT:
-                    if (bounds.right <= 0) {
-                        if (!shouldKeepScrollOffset()) {
-                            viewLeftOrUp();
-                        }
-                        return true;
-                    }
-                    break;
-            }
+                }
+                break;
         }
 
         scroller.forceFinished(true);

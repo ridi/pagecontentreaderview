@@ -10,6 +10,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 class PageContentView extends ViewGroup {
+    private static final int NO_INDEX = Integer.MIN_VALUE;
+
+    private int index;
     private Size canvasSize;
     private FitPolicy fitPolicy;
     private BackgroundTaskListener backgroundTaskListener;
@@ -32,6 +35,7 @@ class PageContentView extends ViewGroup {
                     FitPolicy fitPolicy, BackgroundTaskListener backgroundTaskListener,
                     BitmapPostProcessor postProcessor) {
         this(context, null, 0);
+        this.index = NO_INDEX;
         this.canvasSize = new Size(canvasWidth, canvasHeight);
         this.fitPolicy = fitPolicy;
         this.backgroundTaskListener = backgroundTaskListener;
@@ -48,6 +52,7 @@ class PageContentView extends ViewGroup {
     }
 
     void clear() {
+        index = NO_INDEX;
         if (contentLoadTask != null) {
             contentLoadTask.cancel(true);
             contentLoadTask = null;
@@ -65,11 +70,7 @@ class PageContentView extends ViewGroup {
             hqRenderingTask.cancel(true);
             hqRenderingTask = null;
         }
-        
-        if (size == null) {
-            size = canvasSize;
-        }
-        
+
         entireView.setImageBitmap(null);
         entireView.setBackgroundColor(Color.TRANSPARENT);
         hideHqViewIfExists();
@@ -134,6 +135,13 @@ class PageContentView extends ViewGroup {
     
     void loadPageContent(final PageContentProvider provider, final int index) {
         clear();
+
+        this.index = index;
+        // Calculate scaled size that fits within the screen limits
+        // This is the size at minimum zoom
+        SizeF contentSize = provider.getPageContentSize(index);
+        float scale = fitPolicy.calculateScale(canvasSize.width, canvasSize.height, contentSize);
+        size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         contentLoadTask = new AsyncTask<Void, Void, PageContent>() {
             @Override
@@ -172,12 +180,6 @@ class PageContentView extends ViewGroup {
         }
         
         this.pageContent = pageContent;
-        
-        // Calculate scaled size that fits within the screen limits
-        // This is the size at minimum zoom
-        SizeF contentSize = this.pageContent.getSize();
-        float scale = fitPolicy.calculateScale(canvasSize.width, canvasSize.height, contentSize);
-        size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         // Render the page in the background
         entireRenderingTask = new AsyncRenderingTask<Void, Void, Bitmap>() {
@@ -317,6 +319,10 @@ class PageContentView extends ViewGroup {
             hqView.setImageBitmap(null);
             hqView.setVisibility(INVISIBLE);
         }
+    }
+
+    int getIndex() {
+        return index;
     }
     
     boolean isRendered() {

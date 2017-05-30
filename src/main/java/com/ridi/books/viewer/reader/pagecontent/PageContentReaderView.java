@@ -210,11 +210,19 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
 
     private boolean isLeftOrUpIndexAvailable() {
-        return (reverseMode && currentIndex + 1 < adapter.getCount()) || (!reverseMode && currentIndex > 0);
+        return isLeftOrUpIndexAvailable(currentIndex);
+    }
+
+    private boolean isLeftOrUpIndexAvailable(int index) {
+        return (reverseMode && index + 1 < adapter.getCount()) || (!reverseMode && index > 0);
     }
 
     private boolean isRightOrDownIndexAvailable() {
-        return (reverseMode && currentIndex > 0) || (!reverseMode && currentIndex + 1 < adapter.getCount());
+        return isRightOrDownIndexAvailable(currentIndex);
+    }
+
+    private boolean isRightOrDownIndexAvailable(int index) {
+        return (reverseMode && index > 0) || (!reverseMode && index + 1 < adapter.getCount());
     }
 
     private void setCurrentIndexToLeftOrUp() {
@@ -265,9 +273,18 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         });
     }
     
-    private Point subScreenSizeOffset(View view) {
-        return new Point(Math.max((getWidth() - view.getMeasuredWidth()) / 2, 0),
-                scrollMode ? 0 : Math.max((getHeight() - view.getMeasuredHeight()) / 2, 0));
+    private Point subScreenSizeOffset(PageContentView view) {
+        int x = Math.max((getWidth() - view.getMeasuredWidth()) / 2, 0);
+        if (scrollMode) {
+            if ((reverseMode && view.getIndex() == adapter.getCount() - 1)
+                    || (!reverseMode && view.getIndex() == 0)) {
+                return new Point(x, 0);
+            } else if ((reverseMode && view.getIndex() == 0)
+                    || (!reverseMode && view.getIndex() == adapter.getCount() - 1)) {
+                return new Point(x, getHeight() - view.getMeasuredHeight());
+            }
+        }
+        return new Point(x, Math.max((getHeight() - view.getMeasuredHeight()) / 2, 0));
     }
     
     private View getCached() {
@@ -475,11 +492,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
     
     @Override
-    protected void onLayout(boolean changed, int left, int top, int right,
-            int bottom) {
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         
-        View cv = childViews.get(currentIndex);
+        PageContentView cv = childViews.get(currentIndex);
         Point cvOffset;
 
         if (requestedScale != DEFAULT_SCALE) {
@@ -504,8 +520,9 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             // Remove not needed children and hold them for reuse
             for (int i = childViews.size() - 1; i >= 0; i--) {
                 int index = childViews.keyAt(i);
-                if (index < currentIndex - 1 || index > currentIndex + 1) {
-                    PageContentView v = childViews.get(index);
+                PageContentView v = childViews.get(index);
+                if (scrollMode && (v.getTop() > getHeight() * 2 * scale || v.getBottom() < -getHeight() * scale)
+                    || (!scrollMode && (index < currentIndex - 1 || index > currentIndex + 1))) {
                     v.clear();
                     viewCache.add(v);
                     removeViewInLayout(v);
@@ -517,8 +534,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             scrollOffsetX = scrollOffsetY = 0;
 
             // Remove all children and hold them for reuse
-            int numChildren = childViews.size();
-            for (int i = 0; i < numChildren; i++) {
+            for (int i = 0; i < childViews.size(); i++) {
                 PageContentView v = childViews.valueAt(i);
                 v.clear();
                 viewCache.add(v);
@@ -563,26 +579,22 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         cvBottom = cvTop  + cv.getMeasuredHeight();
         
         if (scrollMode) {
-            if (!isLeftOrUpIndexAvailable()) {
-                if (cvTop > cvOffset.y) {
-                    cvTop = cvOffset.y;
-                    cvBottom = cvTop + cv.getMeasuredHeight();
-                    if (!scroller.isFinished()) {
-                        tryOverFirst = !reverseMode;
-                        tryOverLast = reverseMode;
-                        scroller.forceFinished(true);
-                    }
+            if (!isLeftOrUpIndexAvailable() && cvTop > cvOffset.y) {
+                cvTop = cvOffset.y;
+                cvBottom = cvTop + cv.getMeasuredHeight();
+                if (!scroller.isFinished()) {
+                    tryOverFirst = !reverseMode;
+                    tryOverLast = reverseMode;
+                    scroller.forceFinished(true);
                 }
             }
-            if (!isRightOrDownIndexAvailable()) {
-                if (cvBottom < getHeight() - cvOffset.y) {
-                    cvBottom = getHeight() - cvOffset.y;
-                    cvTop = cvBottom - cv.getMeasuredHeight();
-                    if (!scroller.isFinished()) {
-                        tryOverFirst = reverseMode;
-                        tryOverLast = !reverseMode;
-                        scroller.forceFinished(true);
-                    }
+            if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
+                cvTop = cvOffset.y;
+                cvBottom = cvTop + cv.getMeasuredHeight();
+                if (!scroller.isFinished()) {
+                    tryOverFirst = reverseMode;
+                    tryOverLast = !reverseMode;
+                    scroller.forceFinished(true);
                 }
             }
             if (cvLeft > cvOffset.x) {
@@ -639,106 +651,106 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         
         cv.layout(cvLeft, cvTop, cvRight, cvBottom);
 
-        if (isLeftOrUpIndexAvailable()) {
-            View lv = getOrCreateChild(reverseMode ? currentIndex + 1 : currentIndex - 1);
-            Point leftOffset = subScreenSizeOffset(lv);
-            
+        if (scrollMode) {
             int margin = (int) (pageGapPixels * scale);
-            int lvLeft, lvTop, lvRight, lvBottom;
-            
-            if (scrollMode) {
-                lvLeft = (cvRight + cvLeft - lv.getMeasuredWidth()) / 2;
-                lvRight = (cvRight + cvLeft + lv.getMeasuredWidth()) / 2;
-
-                if (lvLeft < 0 && !scrollMode) {
-                    lvRight += -lvLeft;
-                    lvLeft = 0;
+            while (isLeftOrUpIndexAvailable(cv.getIndex())) {
+                int lvLeft, lvTop, lvRight, lvBottom;
+                lvBottom = cv.getTop() - margin;
+                if (lvBottom < -getHeight() * scale) {
+                    break;
                 }
-
-                if (!scrollMode) {
-                    margin = leftOffset.y + pageGapPixels + cvOffset.y;
-                }
-                lvBottom = cvTop - margin;
-                if (!scrollMode && scaling) {
-                    if (lvBottom > 0) {
-                        lvBottom = -pageGapPixels - leftOffset.y;
-                    }
-                }
+                int index = reverseMode ? cv.getIndex() + 1 : cv.getIndex() - 1;
+                PageContentView lv = getOrCreateChild(index);
                 lvTop = lvBottom - lv.getMeasuredHeight();
+                lvLeft = (cv.getRight() + cv.getLeft() - lv.getMeasuredWidth()) / 2;
+                lvRight = (cv.getRight() + cv.getLeft() + lv.getMeasuredWidth()) / 2;
+                lv.layout(lvLeft, lvTop, lvRight, lvBottom);
+                cv = lv;
+            }
+            for (int i = childViews.size() - 1; i >= 0; i--) {
+                int index = childViews.keyAt(i);
+                if ((reverseMode && index > cv.getIndex()) || (!reverseMode && index < cv.getIndex())) {
+                    PageContentView v = childViews.get(index);
+                    v.clear();
+                    childViews.remove(index);
+                    viewCache.add(v);
+                    removeViewInLayout(v);
+                }
+            }
+            if (!isLeftOrUpIndexAvailable(cv.getIndex()) && cv.getTop() >= 0) {
+                int prevCurrentIndex = currentIndex;
+                currentIndex = cv.getIndex();
+                cv = childViews.get(prevCurrentIndex);
             } else {
+                cv = childViews.get(currentIndex);
+            }
+            while (isRightOrDownIndexAvailable(cv.getIndex())) {
+                int rvLeft, rvTop, rvRight, rvBottom;
+                rvTop = cv.getBottom() + margin;
+                if (rvTop > getHeight() * 2 * scale) {
+                    break;
+                }
+                int index = reverseMode ? cv.getIndex() - 1 : cv.getIndex() + 1;
+                PageContentView rv = getOrCreateChild(index);
+                rvBottom = rvTop + rv.getMeasuredHeight();
+                rvLeft = (cv.getRight() + cv.getLeft() - rv.getMeasuredWidth()) / 2;
+                rvRight = (cv.getRight() + cv.getLeft() + rv.getMeasuredWidth()) / 2;
+                rv.layout(rvLeft, rvTop, rvRight, rvBottom);
+                cv = rv;
+            }
+            for (int i = childViews.size() - 1; i >= 0; i--) {
+                int index = childViews.keyAt(i);
+                if ((reverseMode && index < cv.getIndex()) || (!reverseMode && index > cv.getIndex())) {
+                    PageContentView v = childViews.get(index);
+                    v.clear();
+                    childViews.remove(index);
+                    viewCache.add(v);
+                    removeViewInLayout(v);
+                }
+            }
+            if (adapter.getCount() > 1
+                && !isRightOrDownIndexAvailable(cv.getIndex()) && cv.getBottom() <= getHeight()) {
+                currentIndex = cv.getIndex();
+            }
+        } else {
+            if (isLeftOrUpIndexAvailable()) {
+                PageContentView lv = getOrCreateChild(reverseMode ? currentIndex + 1 : currentIndex - 1);
+                Point leftOffset = subScreenSizeOffset(lv);
+                int lvLeft, lvTop, lvRight, lvBottom;
                 lvTop = (cvBottom + cvTop - lv.getMeasuredHeight()) / 2;
                 lvBottom = (cvBottom + cvTop + lv.getMeasuredHeight()) / 2;
-
-                if (lvTop < 0 && !scrollMode) {
+                if (lvTop < 0) {
                     lvBottom += -lvTop;
                     lvTop = 0;
                 }
-
-                if (!scrollMode) {
-                    margin = leftOffset.x + pageGapPixels + cvOffset.x;
-                }
+                int margin = leftOffset.x + pageGapPixels + cvOffset.x;
                 lvRight = cvLeft - margin;
-                if (!scrollMode && scaling) {
-                    if (lvRight > 0) {
-                        lvRight = -pageGapPixels - leftOffset.x;
-                    }
+                if (scaling && lvRight > 0) {
+                    lvRight = -pageGapPixels - leftOffset.x;
                 }
                 lvLeft = lvRight - lv.getMeasuredWidth();
+                lv.layout(lvLeft, lvTop, lvRight, lvBottom);
             }
-            
-            lv.layout(lvLeft, lvTop, lvRight, lvBottom);
-        }
-
-        if (isRightOrDownIndexAvailable()) {
-            View rv = getOrCreateChild(reverseMode ? currentIndex - 1 : currentIndex + 1);
-            Point rightOffset = subScreenSizeOffset(rv);
-            
-            int margin = (int) (pageGapPixels * scale);
-            int rvLeft, rvTop, rvRight, rvBottom;
-            
-            if (scrollMode) {
-                rvLeft = (cvRight + cvLeft - rv.getMeasuredWidth()) / 2;
-                rvRight = (cvRight + cvLeft + rv.getMeasuredWidth()) / 2;
-
-                if (rvLeft < 0 && !scrollMode) {
-                    rvRight += -rvLeft;
-                    rvLeft = 0;
-                }
-
-                if (!scrollMode) {
-                    margin = cvOffset.y + pageGapPixels + rightOffset.y;
-                }
-                rvTop = cvBottom + margin;
-                if (!scrollMode && scaling) {
-                    if (rvTop < getHeight()) {
-                        rvTop = getHeight() + pageGapPixels + rightOffset.y;
-                    }
-                }
-                rvBottom = rvTop + rv.getMeasuredHeight();
-            } else {
+            if (isRightOrDownIndexAvailable()) {
+                PageContentView rv = getOrCreateChild(reverseMode ? currentIndex - 1 : currentIndex + 1);
+                Point rightOffset = subScreenSizeOffset(rv);
+                int rvLeft, rvTop, rvRight, rvBottom;
                 rvTop = (cvBottom + cvTop - rv.getMeasuredHeight()) / 2;
                 rvBottom = (cvBottom + cvTop + rv.getMeasuredHeight()) / 2;
-
-                if (rvTop < 0 && !scrollMode) {
+                if (rvTop < 0) {
                     rvBottom += -rvTop;
                     rvTop = 0;
                 }
-
-                if (!scrollMode) {
-                    margin = cvOffset.x + pageGapPixels + rightOffset.x;
-                }
+                int margin = cvOffset.x + pageGapPixels + rightOffset.x;
                 rvLeft = cvRight + margin;
-                if (!scrollMode && scaling) {
-                    if (rvLeft < getWidth()) {
-                        rvLeft = getWidth() + pageGapPixels + rightOffset.x;
-                    }
+                if (scaling && rvLeft < getWidth()) {
+                    rvLeft = getWidth() + pageGapPixels + rightOffset.x;
                 }
                 rvRight = rvLeft + rv.getMeasuredWidth();
+                rv.layout(rvLeft, rvTop, rvRight, rvBottom);
             }
-            
-            rv.layout(rvLeft, rvTop, rvRight, rvBottom);
         }
-        
+
         invalidate();
     }
     
@@ -855,6 +867,11 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
     
     private void refresh() {
+        for (int i = 0; i < childViews.size(); i++) {
+            PageContentView v = childViews.valueAt(i);
+            v.clear();
+            removeViewInLayout(v);
+        }
         childViews.clear();
         viewCache.clear();
         removeAllViewsInLayout();

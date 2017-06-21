@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 class PageContentView extends ViewGroup {
-    private static final int NO_INDEX = Integer.MIN_VALUE;
+    static final int NO_INDEX = Integer.MIN_VALUE;
 
     private int index;
     private Size canvasSize;

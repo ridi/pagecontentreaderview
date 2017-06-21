@@ -68,7 +68,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             refresh();
         }
     };
-    private int currentIndex;  // Adapter's index for the current view
+    private int currentIndex = PageContentView.NO_INDEX;    // Adapter's index for the current view
     private boolean resetLayout;
     private SparseArray<PageContentView> childViews;
     private LinkedList<PageContentView> viewCache;
@@ -494,6 +494,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
+
+        if (currentIndex == PageContentView.NO_INDEX) {
+            return;
+        }
         
         PageContentView cv = childViews.get(currentIndex);
         Point cvOffset;

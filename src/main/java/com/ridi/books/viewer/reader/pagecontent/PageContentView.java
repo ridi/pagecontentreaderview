@@ -11,6 +11,7 @@ import android.widget.ImageView;
 
 class PageContentView extends ViewGroup {
     static final int NO_INDEX = Integer.MIN_VALUE;
+    private static final Size ZERO_SIZE = new Size(0, 0);
 
     private int index;
     private Size canvasSize;
@@ -41,6 +42,7 @@ class PageContentView extends ViewGroup {
         this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessor = postProcessor;
 
+        size = ZERO_SIZE;
         entireView = new ImageView(context);
         entireView.setBackgroundColor(Color.TRANSPARENT);
         entireView.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -70,6 +72,8 @@ class PageContentView extends ViewGroup {
             hqRenderingTask.cancel(true);
             hqRenderingTask = null;
         }
+
+        size = ZERO_SIZE;
 
         entireView.setImageBitmap(null);
         entireView.setBackgroundColor(Color.TRANSPARENT);
@@ -137,12 +141,6 @@ class PageContentView extends ViewGroup {
         clear();
 
         this.index = index;
-        // Calculate scaled size that fits within the screen limits
-        // This is the size at minimum zoom
-        SizeF contentSize = provider.getPageContentSize(index);
-        float scale = fitPolicy.calculateScale(canvasSize.width, canvasSize.height, contentSize);
-        size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
-        
         contentLoadTask = new AsyncTask<Void, Void, PageContent>() {
             @Override
             protected void onPreExecute() {
@@ -180,6 +178,11 @@ class PageContentView extends ViewGroup {
         }
         
         this.pageContent = pageContent;
+        // Calculate scaled size that fits within the screen limits
+        // This is the size at minimum zoom
+        SizeF contentSize = pageContent.getSize();
+        float scale = fitPolicy.calculateScale(canvasSize.width, canvasSize.height, contentSize);
+        size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         // Render the page in the background
         entireRenderingTask = new AsyncRenderingTask<Void, Void, Bitmap>() {

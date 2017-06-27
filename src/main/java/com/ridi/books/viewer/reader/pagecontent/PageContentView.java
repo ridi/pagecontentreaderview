@@ -11,7 +11,6 @@ import android.widget.ImageView;
 
 class PageContentView extends ViewGroup {
     static final int NO_INDEX = Integer.MIN_VALUE;
-    private static final Size ZERO_SIZE = new Size(0, 0);
 
     private int index;
     private Size canvasSize;
@@ -42,7 +41,7 @@ class PageContentView extends ViewGroup {
         this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessor = postProcessor;
 
-        size = ZERO_SIZE;
+        size = canvasSize;
         entireView = new ImageView(context);
         entireView.setBackgroundColor(Color.TRANSPARENT);
         entireView.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -73,7 +72,7 @@ class PageContentView extends ViewGroup {
             hqRenderingTask = null;
         }
 
-        size = ZERO_SIZE;
+        size = canvasSize;
 
         entireView.setImageBitmap(null);
         entireView.setBackgroundColor(Color.TRANSPARENT);

@@ -365,9 +365,10 @@ class PageContentView extends ViewGroup {
         }
     }
 
-    private abstract class AsyncRenderingTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
+    private abstract class AsyncRenderingTask<Params, Progress, Result>
+            extends AsyncTask<Params, Progress, Result> {
         protected Bitmap applyPostProcessor(Bitmap bitmap) {
-            if (postProcessor != null) {
+            if (!isCancelled() && postProcessor != null) {
                 Bitmap processed = postProcessor.process(bitmap);
                 if (processed != bitmap) {
                     bitmap.recycle();

@@ -100,6 +100,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     private boolean userInteracting;
     private boolean sliding;
+
+    private boolean flexibleContentSize;
     
     private Listener listener;
     
@@ -203,6 +205,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     public int getCurrentIndex() {
         return currentIndex;
+    }
+
+    public void setFlexibleContentSize(boolean flexibleContentSize) {
+        this.flexibleContentSize = flexibleContentSize;
     }
 
     private boolean shouldKeepScrollOffset() {
@@ -426,14 +432,18 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         int count = adapter.getCount();
         if (scrollMode && count > 1) {
             long current = -view.getTop(), total = 0L;
-            for (int i = 0; i < count; i++) {
-                SizeF contentSize = adapter.getPageContentSize(i);
-                float scale = adapter.getFitPolicy().calculateScale(getWidth(), getHeight(), contentSize);
-                float height = contentSize.height * scale * this.scale + pageGapPixels * this.scale;
-                total += height;
-                if (i < currentIndex) {
-                    current += height;
+            if (flexibleContentSize) {
+                for (int i = 0; i < count; i++) {
+                    float height = getPageContentSizeHeight(i);
+                    total += height;
+                    if (i < currentIndex) {
+                        current += height;
+                    }
                 }
+            } else {
+                float height = getPageContentSizeHeight(0);
+                total = (long) (count * height);
+                current = (long) (currentIndex * height);
             }
 
             float size = (float) getHeight() * getHeight() / total;
@@ -481,6 +491,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         canvas.drawRoundRect(new RectF(
                 getWidth() - SCROLLBAR_STROKE_WIDTH, position, getWidth(), position + size),
                 2, 4, SCROLLBAR_PAINT);
+    }
+
+    private float getPageContentSizeHeight(int position) {
+        SizeF contentSize = adapter.getPageContentSize(position);
+        float scale = adapter.getFitPolicy().calculateScale(getWidth(), getHeight(), contentSize);
+        return contentSize.height * scale * this.scale + pageGapPixels * this.scale;
     }
     
     @Override

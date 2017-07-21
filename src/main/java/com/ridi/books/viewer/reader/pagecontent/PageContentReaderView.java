@@ -100,6 +100,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     private boolean userInteracting;
     private boolean sliding;
+
+    private boolean flexibleContentSize;
     
     private Listener listener;
     
@@ -203,6 +205,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     public int getCurrentIndex() {
         return currentIndex;
+    }
+
+    public void setFlexibleContentSize(boolean flexibleContentSize) {
+        this.flexibleContentSize = flexibleContentSize;
     }
 
     private boolean shouldKeepScrollOffset() {
@@ -418,7 +424,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
     
     private void drawScrollBars(Canvas canvas) {
-        View view = childViews.get(currentIndex);
+        PageContentView view = childViews.get(currentIndex);
         if (view == null || view.getMeasuredWidth() == 0 || view.getMeasuredHeight() == 0) {
             return;
         }
@@ -426,14 +432,21 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         int count = adapter.getCount();
         if (scrollMode && count > 1) {
             long current = -view.getTop(), total = 0L;
-            for (int i = 0; i < count; i++) {
-                SizeF contentSize = adapter.getPageContentSize(i);
-                float scale = adapter.getFitPolicy().calculateScale(getWidth(), getHeight(), contentSize);
-                float height = contentSize.height * scale * this.scale + pageGapPixels * this.scale;
-                total += height;
-                if (i < currentIndex) {
-                    current += height;
+            if (flexibleContentSize) {
+                for (int i = 0; i < count; i++) {
+                    SizeF contentSize = adapter.getPageContentSize(i);
+                    float scale = adapter.getFitPolicy().calculateScale(getWidth(), getHeight(), contentSize);
+                    float height = contentSize.height * scale * this.scale + pageGapPixels * this.scale;
+                    total += height;
+                    if (i < currentIndex) {
+                        current += height;
+                    }
                 }
+            } else {
+                int prevCount = reverseMode ? count - currentIndex - 1 : currentIndex;
+                Point offset =  subScreenSizeOffset(view);
+                total = (int) (offset.y * 2 + view.getMeasuredHeight() * count + pageGapPixels * scale * (count - 1));
+                current = (int) (offset.y + prevCount * (view.getMeasuredHeight() + pageGapPixels * scale) - view.getTop());
             }
 
             float size = (float) getHeight() * getHeight() / total;

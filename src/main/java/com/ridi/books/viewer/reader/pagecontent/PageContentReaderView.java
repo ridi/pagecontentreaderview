@@ -1112,11 +1112,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
          */
         float focusX = e.getX();
         float focusY = e.getY();
+        float contentWidth = view.getWidth();
+        float contentHeight = view.getHeight();
         float toScale;
         if (scale == DEFAULT_SCALE) {
-            float contentWidth = view.getWidth();
-            float contentHeight = view.getHeight();
-
             if (focusX < view.getLeft() || focusX > view.getLeft() + contentWidth
                     || focusY < view.getTop() || focusY > view.getTop() + contentHeight) {
                 onSingleTapConfirmed(e);
@@ -1137,6 +1136,14 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             }
         } else {
             toScale = DEFAULT_SCALE;
+
+            if (contentWidth > contentHeight) {
+                if (focusX - view.getLeft() < contentWidth / 2.0f) {
+                    focusX = getLeft();
+                } else {
+                    focusX = getRight();
+                }
+            }
         }
 
         prepareScaling();
@@ -1190,6 +1197,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                     if (isLastExecution) {
                         scrollDisabled = false;
                         endScaling();
+                        PageContentView view = childViews.get(currentIndex);
+                        if (view != null) {
+                            postSettle(view);
+                        }
                     }
                 }
             }, delayMillis);

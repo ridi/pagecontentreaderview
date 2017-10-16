@@ -2,6 +2,7 @@ package com.ridi.books.viewer.reader.pagecontent;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Rect;
 
 public class DoublePageContent implements PageContent {
@@ -65,6 +66,7 @@ public class DoublePageContent implements PageContent {
 
         Bitmap bitmap = Bitmap.createBitmap(
                 bitmapWidth, bitmapHeight, getPreferredBitmapConfig(leftBitmap, rightBitmap));
+        bitmap.eraseColor(Color.WHITE);
 
         Canvas canvas = new Canvas(bitmap);
         if (leftBitmap != null) {

@@ -42,6 +42,8 @@ public class DoublePageContent implements PageContent {
         if (-startX < leftPageWidth && leftBmHeight > 0) {  // 왼쪽 페이지가 영역에 포함됨
             leftBitmap = leftPage.renderToBitmap(leftBmWidth, leftBmHeight,
                     startX, startY, leftPageWidth, leftPageHeight, forHighQuality);
+        } else {
+            leftBmWidth = 0;
         }
 
         int rightPageWidth = (int) ((float) pageWidth * rightSize.width / size.width);
@@ -71,13 +73,12 @@ public class DoublePageContent implements PageContent {
         Canvas canvas = new Canvas(bitmap);
         if (leftBitmap != null) {
             canvas.drawBitmap(leftBitmap, null,
-                    new Rect(0, 0,
-                            leftBitmap.getWidth(), leftBitmap.getHeight()),
-                    null);
+                    new Rect(0, 0, leftBitmap.getWidth(), leftBitmap.getHeight()), null);
             leftBitmap.recycle();
         }
         if (rightBitmap != null) {
-            int left = leftBitmap != null ? leftBitmap.getWidth() : 0;
+            int left = leftBitmap != null ? leftBitmap.getWidth()
+                    : bitmapWidth - rightBitmap.getWidth();
             canvas.drawBitmap(rightBitmap, null,
                     new Rect(left, 0, left + rightBitmap.getWidth(), rightBitmap.getHeight()), null);
             rightBitmap.recycle();

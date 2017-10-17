@@ -20,7 +20,15 @@ public class DoublePageContentProvider implements PageContentProvider {
     public void setSingleOnFirstPage(boolean singleOnFirstPage) {
         this.singleOnFirstPage = singleOnFirstPage;
     }
-    
+
+    public boolean isReverseMode() {
+        return reverseMode;
+    }
+
+    public void setReverseMode(boolean reverseMode) {
+        this.reverseMode = reverseMode;
+    }
+
     @Override
     public int getPageContentCount() {
         int singleCount = singleProvider.getPageContentCount();

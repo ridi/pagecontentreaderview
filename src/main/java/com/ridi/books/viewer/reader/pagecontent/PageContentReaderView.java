@@ -1311,10 +1311,6 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         }
     }
 
-    private int dipToPixel(int dip) {
-        return Math.round(dip * getResources().getDisplayMetrics().density);
-    }
-
     public void requestScale(float scale, Point scrollOffset) {
         requestedScale = scale;
         if (keepScrollOffsetEnabled && scrollOffset != null) {

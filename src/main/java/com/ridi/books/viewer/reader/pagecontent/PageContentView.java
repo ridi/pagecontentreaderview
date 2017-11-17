@@ -22,8 +22,8 @@ class PageContentView extends ViewGroup {
     private PageContent pageContent;
     private AsyncTask<Void, Void, PageContent> contentLoadTask;
     
-    private ImageView entireView;
-    private AsyncTask<Void, Void, Bitmap> entireRenderingTask;
+    private ImageView fullView;
+    private AsyncTask<Void, Void, Bitmap> fullRenderingTask;
     private ImageView hqView;  // high quality view
     private AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
     private HighQualityInfo hqInfo;
@@ -42,10 +42,10 @@ class PageContentView extends ViewGroup {
         this.postProcessor = postProcessor;
 
         size = canvasSize;
-        entireView = new ImageView(context);
-        entireView.setBackgroundColor(Color.TRANSPARENT);
-        entireView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        addView(entireView);
+        fullView = new ImageView(context);
+        fullView.setBackgroundColor(Color.TRANSPARENT);
+        fullView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        addView(fullView);
     }
 
     private PageContentView(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -62,9 +62,9 @@ class PageContentView extends ViewGroup {
         pageContent = null;
         rendered = false;
         
-        if (entireRenderingTask != null) {
-            entireRenderingTask.cancel(true);
-            entireRenderingTask = null;
+        if (fullRenderingTask != null) {
+            fullRenderingTask.cancel(true);
+            fullRenderingTask = null;
         }
         
         if (hqRenderingTask != null) {
@@ -74,8 +74,8 @@ class PageContentView extends ViewGroup {
 
         size = canvasSize;
 
-        entireView.setImageBitmap(null);
-        entireView.setBackgroundColor(Color.TRANSPARENT);
+        fullView.setImageBitmap(null);
+        fullView.setBackgroundColor(Color.TRANSPARENT);
         hideHqViewIfExists();
     }
     
@@ -123,7 +123,7 @@ class PageContentView extends ViewGroup {
         int width = right - left;
         int height = bottom - top;
 
-        entireView.layout(0, 0, width, height);
+        fullView.layout(0, 0, width, height);
 
         if (hqInfo != null) {
             if (hqInfo.size.width != width || hqInfo.size.height != height) {
@@ -171,9 +171,9 @@ class PageContentView extends ViewGroup {
             return;
         }
         
-        if (entireRenderingTask != null) {
-            entireRenderingTask.cancel(true);
-            entireRenderingTask = null;
+        if (fullRenderingTask != null) {
+            fullRenderingTask.cancel(true);
+            fullRenderingTask = null;
         }
         
         this.pageContent = pageContent;
@@ -184,7 +184,7 @@ class PageContentView extends ViewGroup {
         size = new Size((int) (contentSize.width * scale), (int) (contentSize.height * scale));
         
         // Render the page in the background
-        entireRenderingTask = new AsyncRenderingTask<Void, Void, Bitmap>() {
+        fullRenderingTask = new AsyncRenderingTask<Void, Void, Bitmap>() {
             @Override
             protected void onPreExecute() {
                 onStartBackgroundTask();
@@ -206,8 +206,8 @@ class PageContentView extends ViewGroup {
             @Override
             protected void onPostExecute(Bitmap result) {
                 onCompleteBackgroundTask();
-                entireView.setImageBitmap(result);
-                entireView.setBackgroundColor(Color.WHITE);
+                fullView.setImageBitmap(result);
+                fullView.setBackgroundColor(Color.WHITE);
                 rendered = true;
                 invalidate();
             }
@@ -218,7 +218,7 @@ class PageContentView extends ViewGroup {
             }
         };
 
-        entireRenderingTask.execute();
+        fullRenderingTask.execute();
         
         requestLayout();
     }
@@ -287,7 +287,7 @@ class PageContentView extends ViewGroup {
                 
                 @Override
                 protected void onPostExecute(HighQualityInfo result) {
-                    if (hqRenderingTask == this) {
+                    if (hqRenderingTask == this && result.bitmap != null) {
                         hqInfo = result;
                         hqView.setImageBitmap(result.bitmap);
                         hqView.setVisibility(VISIBLE);

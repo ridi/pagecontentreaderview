@@ -1,7 +1,7 @@
 # PageContentReaderView
 
-[![Build Status](https://travis-ci.org/ridibooks/pagecontentreaderview.svg?branch=master)](https://travis-ci.org/ridibooks/pagecontentreaderview)
-[![Release](https://jitpack.io/v/ridibooks/pagecontentreaderview.svg)](https://jitpack.io/#ridibooks/pagecontentreaderview)
+[![Build Status](https://travis-ci.org/ridi/pagecontentreaderview.svg?branch=master)](https://travis-ci.org/ridi/pagecontentreaderview)
+[![Release](https://jitpack.io/v/ridi/pagecontentreaderview.svg)](https://jitpack.io/#ridibooks/pagecontentreaderview)
 
 ## Getting started
 
@@ -23,7 +23,7 @@ Then you can include this library by adding dependency script to build.gradle fi
 ```
 dependencies {
     ...
-    compile 'com.github.ridibooks:pagecontentreaderview:<version>'
+    compile 'com.github.ridi:pagecontentreaderview:<version>'
     ...
 }
 ```

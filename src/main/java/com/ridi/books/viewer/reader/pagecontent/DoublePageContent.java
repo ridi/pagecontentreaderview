@@ -9,11 +9,11 @@ public class DoublePageContent implements PageContent {
     private final PageContent leftPage;
     private final PageContent rightPage;
     private final SizeF size;
-    
-    DoublePageContent(PageContent leftPage, PageContent rightPage) {
+
+    DoublePageContent(PageContent leftPage, PageContent rightPage, SizePolicy sizePolicy) {
         this.leftPage = leftPage;
         this.rightPage = rightPage;
-        this.size = getSize(leftPage.getSize(), rightPage.getSize());
+        this.size = sizePolicy.computeSize(leftPage.getSize(), rightPage.getSize());
     }
 
     @Override
@@ -73,7 +73,8 @@ public class DoublePageContent implements PageContent {
         Canvas canvas = new Canvas(bitmap);
         if (leftBitmap != null) {
             canvas.drawBitmap(leftBitmap, null,
-                    new Rect(0, 0, leftBitmap.getWidth(), leftBitmap.getHeight()), null);
+                    new Rect(0, 0,
+                            leftBitmap.getWidth(), leftBitmap.getHeight()), null);
             leftBitmap.recycle();
         }
         if (rightBitmap != null) {
@@ -94,8 +95,18 @@ public class DoublePageContent implements PageContent {
         return Bitmap.Config.values()[preferredBitmapConfigOrdinal];
     }
 
-    static SizeF getSize(SizeF leftSize, SizeF rightSize) {
-        return new SizeF(Math.max(leftSize.width, rightSize.width) * 2,
-                Math.max(leftSize.height, rightSize.height));
+    public enum SizePolicy {
+        SMALLER_FIT,
+        LARGER_FIT;
+
+        SizeF computeSize(SizeF leftSize, SizeF rightSize) {
+            if (this == SMALLER_FIT) {
+                return new SizeF(Math.min(leftSize.width, rightSize.width) * 2,
+                        Math.min(leftSize.height, rightSize.height));
+            } else {
+                return new SizeF(Math.max(leftSize.width, rightSize.width) * 2,
+                        Math.max(leftSize.height, rightSize.height));
+            }
+        }
     }
 }

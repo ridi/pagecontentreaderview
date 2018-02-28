@@ -1,16 +1,19 @@
 package com.ridi.books.viewer.reader.pagecontent;
 
 public class DoublePageContentProvider implements PageContentProvider {
-    private PageContentProvider singleProvider;
+    private final PageContentProvider singleProvider;
     private boolean singleOnFirstPage;    // 첫페이지는 싱글?
     private boolean reverseMode;          // 역방향
-    private boolean useDummyContent;
+    private final boolean useDummyContent;
+    private final DoublePageContent.SizePolicy sizePolicy;
     
     public DoublePageContentProvider(PageContentProvider singleProvider,
-                                     boolean reverseMode, boolean useDummyContent) {
+                                     boolean reverseMode, boolean useDummyContent,
+                                     DoublePageContent.SizePolicy sizePolicy) {
         this.singleProvider = singleProvider;
         this.reverseMode = reverseMode;
         this.useDummyContent = useDummyContent;
+        this.sizePolicy = sizePolicy;
     }
     
     public boolean isSingleOnFirstPage() {
@@ -75,7 +78,7 @@ public class DoublePageContentProvider implements PageContentProvider {
                 return leftSize;
             }
         }
-        return DoublePageContent.getSize(leftSize, rightSize);
+        return sizePolicy.computeSize(leftSize, rightSize);
     }
 
     @Override
@@ -114,7 +117,7 @@ public class DoublePageContentProvider implements PageContentProvider {
                 return leftPage;
             }
         }
-        return new DoublePageContent(leftPage, rightPage);
+        return new DoublePageContent(leftPage, rightPage, sizePolicy);
     }
     
     public int getLeftPageIndex(int index) {

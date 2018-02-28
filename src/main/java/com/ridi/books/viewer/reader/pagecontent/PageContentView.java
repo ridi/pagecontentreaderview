@@ -2,7 +2,6 @@ package com.ridi.books.viewer.reader.pagecontent;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.util.AttributeSet;

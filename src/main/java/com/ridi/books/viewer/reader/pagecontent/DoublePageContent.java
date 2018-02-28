@@ -9,7 +9,8 @@ public class DoublePageContent implements PageContent {
     private final PageContent rightPage;
     private final SizeF size;
 
-    DoublePageContent(PageContent leftPage, PageContent rightPage, SizePolicy sizePolicy) {
+    DoublePageContent(PageContent leftPage, PageContent rightPage,
+                      DoublePageSizePolicy sizePolicy) {
         this.leftPage = leftPage;
         this.rightPage = rightPage;
         this.size = sizePolicy.computeSize(leftPage.getSize(), rightPage.getSize());
@@ -82,20 +83,5 @@ public class DoublePageContent implements PageContent {
         }
 
         return bitmap;
-    }
-
-    public enum SizePolicy {
-        SMALLER_FIT,
-        LARGER_FIT;
-
-        SizeF computeSize(SizeF leftSize, SizeF rightSize) {
-            if (this == SMALLER_FIT) {
-                return new SizeF(Math.min(leftSize.width, rightSize.width) * 2,
-                        Math.min(leftSize.height, rightSize.height));
-            } else {
-                return new SizeF(Math.max(leftSize.width, rightSize.width) * 2,
-                        Math.max(leftSize.height, rightSize.height));
-            }
-        }
     }
 }

@@ -5,11 +5,11 @@ public class DoublePageContentProvider implements PageContentProvider {
     private boolean singleOnFirstPage;    // 첫페이지는 싱글?
     private boolean reverseMode;          // 역방향
     private final boolean useDummyContent;
-    private final DoublePageContent.SizePolicy sizePolicy;
+    private final DoublePageSizePolicy sizePolicy;
     
     public DoublePageContentProvider(PageContentProvider singleProvider,
                                      boolean reverseMode, boolean useDummyContent,
-                                     DoublePageContent.SizePolicy sizePolicy) {
+                                     DoublePageSizePolicy sizePolicy) {
         this.singleProvider = singleProvider;
         this.reverseMode = reverseMode;
         this.useDummyContent = useDummyContent;

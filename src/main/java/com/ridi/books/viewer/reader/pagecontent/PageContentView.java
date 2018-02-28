@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.AsyncTask;
+import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -13,6 +14,7 @@ class PageContentView extends ViewGroup {
 
     private int index;
     private Size canvasSize;
+    @ColorInt private int paperColor;
     private FitPolicy fitPolicy;
     private BackgroundTaskListener backgroundTaskListener;
 
@@ -30,24 +32,27 @@ class PageContentView extends ViewGroup {
     
     private boolean rendered;
 
-    PageContentView(Context context, int canvasWidth, int canvasHeight,
+    PageContentView(Context context, int canvasWidth, int canvasHeight, @ColorInt int paperColor,
                     FitPolicy fitPolicy, BackgroundTaskListener backgroundTaskListener,
                     BitmapPostProcessor postProcessor) {
-        this(context, null, 0);
+        this(context, null);
         this.index = NO_INDEX;
         this.canvasSize = new Size(canvasWidth, canvasHeight);
+        this.paperColor = paperColor;
         this.fitPolicy = fitPolicy;
         this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessor = postProcessor;
 
         size = canvasSize;
         fullView = new ImageView(context);
+        fullView.setBackgroundColor(paperColor);
+        fullView.setVisibility(INVISIBLE);
         fullView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         addView(fullView);
     }
 
-    private PageContentView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+    private PageContentView(Context context, AttributeSet attrs) {
+        super(context, attrs);
     }
 
     void clear() {
@@ -73,6 +78,7 @@ class PageContentView extends ViewGroup {
         size = canvasSize;
 
         fullView.setImageBitmap(null);
+        fullView.setVisibility(INVISIBLE);
         hideHqViewIfExists();
     }
     
@@ -204,6 +210,7 @@ class PageContentView extends ViewGroup {
             protected void onPostExecute(Bitmap result) {
                 onCompleteBackgroundTask();
                 fullView.setImageBitmap(result);
+                fullView.setVisibility(VISIBLE);
                 rendered = true;
                 invalidate();
             }
@@ -254,6 +261,7 @@ class PageContentView extends ViewGroup {
             // Create and add the image view if not already done
             if (hqView == null) {
                 hqView = new ImageView(getContext());
+                hqView.setBackgroundColor(paperColor);
                 hqView.setVisibility(INVISIBLE);
                 hqView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 addView(hqView);

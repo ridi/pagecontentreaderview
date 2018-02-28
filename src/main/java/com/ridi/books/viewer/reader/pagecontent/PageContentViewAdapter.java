@@ -1,6 +1,8 @@
 package com.ridi.books.viewer.reader.pagecontent;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.support.annotation.ColorInt;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -32,7 +34,8 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
         PageContentView view;
         if (convertView == null) {
             view = new PageContentView(context, parent.getWidth(), parent.getHeight(),
-                    getFitPolicy(), getBackgroundTaskListener(), getBitmapPostProcessor());
+                    getPaperColor(), getFitPolicy(),
+                    getBackgroundTaskListener(), getBitmapPostProcessor());
         } else {
             view = (PageContentView) convertView;
         }
@@ -45,6 +48,9 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
     }
 
     protected abstract PageContentProvider getPageContentProvider();
+
+    @ColorInt
+    protected abstract int getPaperColor();
 
     protected abstract FitPolicy getFitPolicy();
 

@@ -2,7 +2,6 @@ package com.ridi.books.viewer.reader.pagecontent;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Rect;
 
 public class DoublePageContent implements PageContent {
@@ -66,10 +65,7 @@ public class DoublePageContent implements PageContent {
             return null;
         }
 
-        Bitmap bitmap = Bitmap.createBitmap(
-                bitmapWidth, bitmapHeight, getPreferredBitmapConfig(leftBitmap, rightBitmap));
-        bitmap.eraseColor(Color.WHITE);
-
+        Bitmap bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         if (leftBitmap != null) {
             canvas.drawBitmap(leftBitmap, null,
@@ -86,13 +82,6 @@ public class DoublePageContent implements PageContent {
         }
 
         return bitmap;
-    }
-
-    private Bitmap.Config getPreferredBitmapConfig(Bitmap leftBitmap, Bitmap rightBitmap) {
-        int leftBitmapConfigOrdinal = leftBitmap != null ? leftBitmap.getConfig().ordinal() : -1;
-        int rightBitmapConfigOrdinal = rightBitmap != null ? rightBitmap.getConfig().ordinal() : -1;
-        int preferredBitmapConfigOrdinal = Math.max(leftBitmapConfigOrdinal, rightBitmapConfigOrdinal);
-        return Bitmap.Config.values()[preferredBitmapConfigOrdinal];
     }
 
     public enum SizePolicy {

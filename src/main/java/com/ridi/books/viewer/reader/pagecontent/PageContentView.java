@@ -43,7 +43,6 @@ class PageContentView extends ViewGroup {
 
         size = canvasSize;
         fullView = new ImageView(context);
-        fullView.setBackgroundColor(Color.TRANSPARENT);
         fullView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         addView(fullView);
     }
@@ -75,7 +74,6 @@ class PageContentView extends ViewGroup {
         size = canvasSize;
 
         fullView.setImageBitmap(null);
-        fullView.setBackgroundColor(Color.TRANSPARENT);
         hideHqViewIfExists();
     }
     
@@ -207,7 +205,6 @@ class PageContentView extends ViewGroup {
             protected void onPostExecute(Bitmap result) {
                 onCompleteBackgroundTask();
                 fullView.setImageBitmap(result);
-                fullView.setBackgroundColor(Color.WHITE);
                 rendered = true;
                 invalidate();
             }
@@ -258,7 +255,6 @@ class PageContentView extends ViewGroup {
             // Create and add the image view if not already done
             if (hqView == null) {
                 hqView = new ImageView(getContext());
-                hqView.setBackgroundColor(Color.WHITE);
                 hqView.setVisibility(INVISIBLE);
                 hqView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 addView(hqView);

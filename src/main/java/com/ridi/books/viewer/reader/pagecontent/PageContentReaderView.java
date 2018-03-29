@@ -982,6 +982,24 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
 
     @Override
+    public void offsetTopAndBottom(int offset) {
+        if (!scrollDisabled) {
+            scrollOffsetY -= offset;
+            requestLayout();
+
+            PageContentView cv = childViews.get(currentIndex);
+            Point cvOffset = subScreenSizeOffset(cv);
+            int cvTop = cv.getTop() + scrollOffsetY;
+
+            if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
+                tryOverLast = !reverseMode;
+            }
+
+            post(scrollProcessor);
+        }
+    }
+
+    @Override
     public void onLongPress(MotionEvent e) {
     }
 

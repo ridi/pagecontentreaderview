@@ -992,10 +992,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             int cvTop = cv.getTop() + scrollOffsetY;
 
             if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
-                tryOverLast = !reverseMode;
+                listener.onTryOverLastPage();
             }
-
-            post(scrollProcessor);
         }
     }
 

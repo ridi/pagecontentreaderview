@@ -994,6 +994,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
                 listener.onTryOverLastPage();
             }
+        } else {
+            super.scrollBy(x, y);
         }
     }
 

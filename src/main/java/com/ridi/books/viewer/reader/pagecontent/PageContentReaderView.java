@@ -981,21 +981,20 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         return false;
     }
 
-    @Override
-    public void scrollBy(int x, int y) {
-        if (!scrollDisabled) {
-            scrollOffsetY -= y;
-            requestLayout();
+    public void scrollUpAndDown(int offsetY) {
+        if (scrollDisabled) {
+            return;
+        }
 
-            PageContentView cv = childViews.get(currentIndex);
-            Point cvOffset = subScreenSizeOffset(cv);
-            int cvTop = cv.getTop() + scrollOffsetY;
+        scrollOffsetY -= offsetY;
+        requestLayout();
 
-            if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
-                listener.onTryOverLastPage();
-            }
-        } else {
-            super.scrollBy(x, y);
+        PageContentView cv = childViews.get(currentIndex);
+        Point cvOffset = subScreenSizeOffset(cv);
+        int cvTop = cv.getTop() + scrollOffsetY;
+
+        if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
+            listener.onTryOverLastPage();
         }
     }
 

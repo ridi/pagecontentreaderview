@@ -982,9 +982,9 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
 
     @Override
-    public void offsetTopAndBottom(int offset) {
+    public void scrollBy(int x, int y) {
         if (!scrollDisabled) {
-            scrollOffsetY -= offset;
+            scrollOffsetY -= y;
             requestLayout();
 
             PageContentView cv = childViews.get(currentIndex);

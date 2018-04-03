@@ -981,20 +981,23 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         return false;
     }
 
-    public void scrollVerticalInScrollMode(int offsetY) {
-        if (scrollMode) {
-            scrollOffsetY -= offsetY;
-            requestLayout();
+    public void scrollVerticalInScrollMode(int offset) {
+        if (!scrollMode) {
+            return;
+        }
+        
+        scrollOffsetY -= offset;
+        requestLayout();
 
-            PageContentView cv = childViews.get(currentIndex);
-            Point cvOffset = subScreenSizeOffset(cv);
-            int cvTop = cv.getTop() + scrollOffsetY;
+        PageContentView cv = childViews.get(currentIndex);
+        Point cvOffset = subScreenSizeOffset(cv);
+        int cvTop = cv.getTop() + scrollOffsetY;
 
-            if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
-                listener.onTryOverLastPage();
-            }
+        if (!isRightOrDownIndexAvailable() && cvTop < cvOffset.y) {
+            listener.onTryOverLastPage();
         }
     }
+
 
     @Override
     public void onLongPress(MotionEvent e) {

@@ -23,7 +23,7 @@ Then you can include this library by adding dependency script to build.gradle fi
 ```
 dependencies {
     ...
-    compile 'com.github.ridi:pagecontentreaderview:<version>'
+    implementation 'com.github.ridi:pagecontentreaderview:<version>'
     ...
 }
 ```

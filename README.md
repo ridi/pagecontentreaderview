@@ -7,14 +7,13 @@
 
 This library is distributed by [jitpack](https://jitpack.io).
 
-You should add jitpack maven repository to build.gradle file of your root project.
+You should add jitpack maven repository to build.gradle file of your project.
 
 ```
 allprojects {
-    repositories {
-        jcenter()
-        maven { url "https://jitpack.io" }
-    }
+    ...
+    maven { url "https://jitpack.io" }
+    ...
 }
 ```
 

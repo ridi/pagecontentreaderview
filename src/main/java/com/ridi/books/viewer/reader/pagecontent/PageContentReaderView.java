@@ -503,15 +503,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             measureView(childViews.valueAt(i));
         }
     }
-    
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
 
+    private void doLayout() {
         if (currentIndex == PageContentView.NO_INDEX) {
             return;
         }
-        
+
         PageContentView cv = childViews.get(currentIndex);
         Point cvOffset;
 
@@ -519,21 +516,21 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             scale = requestedScale;
             requestedScale = DEFAULT_SCALE;
         }
-        
+
         if (!resetLayout) {
             // Move to next or previous if current is sufficiently off center
             if (cv != null && scrollMode && !sliding) {
                 cvOffset = subScreenSizeOffset(cv);
                 if (cv.getTop() + cv.getMeasuredHeight() + cvOffset.y
-                        + pageGapPixels * scale / 2 + scrollOffsetY < getHeight() / 2) {
+                    + pageGapPixels * scale / 2 + scrollOffsetY < getHeight() / 2) {
                     setCurrentIndexToRightOrDown();
                 }
                 if (cv.getTop() - cvOffset.y
-                        - pageGapPixels * scale / 2 + scrollOffsetY >= getHeight() / 2) {
+                    - pageGapPixels * scale / 2 + scrollOffsetY >= getHeight() / 2) {
                     setCurrentIndexToLeftOrUp();
                 }
             }
-            
+
             // Remove not needed children and hold them for reuse
             for (int i = childViews.size() - 1; i >= 0; i--) {
                 int index = childViews.keyAt(i);
@@ -589,12 +586,12 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 cvTop  = cv.getTop()  + scrollOffsetY;
             }
         }
-        
+
         // Scroll values have been accounted for
         scrollOffsetX = scrollOffsetY = 0;
         cvRight  = cvLeft + cv.getMeasuredWidth();
         cvBottom = cvTop  + cv.getMeasuredHeight();
-        
+
         if (scrollMode) {
             if (!isLeftOrUpIndexAvailable() && cvTop > cvOffset.y) {
                 cvTop = cvOffset.y;
@@ -645,7 +642,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 }
             }
         }
-        
+
         if (!userInteracting && scroller.isFinished()) {
             Point corr = getCorrection(getScrollBounds(cvLeft, cvTop, cvRight, cvBottom));
             cvRight  += corr.x;
@@ -665,7 +662,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             cvLeft   += corr.x;
             cvRight  += corr.x;
         }
-        
+
         cv.layout(cvLeft, cvTop, cvRight, cvBottom);
 
         if (scrollMode) {
@@ -767,6 +764,13 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 rv.layout(rvLeft, rvTop, rvRight, rvBottom);
             }
         }
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
+        doLayout();
 
         invalidate();
     }
@@ -1275,7 +1279,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 slideViewOntoScreen(view);
             }
         } else {
-            requestLayout();
+            doLayout();
             post(scrollProcessor);
         }
     }
@@ -1305,7 +1309,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 slideViewOntoScreen(view);
             }
         } else {
-            requestLayout();
+            doLayout();
             post(scrollProcessor);
         }
     }

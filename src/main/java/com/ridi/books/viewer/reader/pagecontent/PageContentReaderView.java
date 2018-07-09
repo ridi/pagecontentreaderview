@@ -847,9 +847,6 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             }
             touchStartOffset = null;
         }
-        
-        requestLayout();
-        
         return true;
     }
     

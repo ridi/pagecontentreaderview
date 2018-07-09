@@ -19,6 +19,7 @@ class PageContentImageView extends View {
     private ImageView.ScaleType scaleType;
     private Rect rect = new Rect();
     private boolean isHighQualityView;
+    private boolean didDrawOnce;
 
     PageContentImageView(Context context) {
         this(context, null);
@@ -47,6 +48,7 @@ class PageContentImageView extends View {
         }
         this.bitmap = bitmap;
         this.bitmapSet = (bitmap != null);
+        this.didDrawOnce = false;
     }
 
     @Override
@@ -59,9 +61,7 @@ class PageContentImageView extends View {
             rect.set(left, top, right, bottom);
         }
 
-        Log.d("PageContentImageView", "onLayout changed=" + changed + " rect=" + rect.toString());
-
-        if (changed) {
+        if (bitmapSet && changed && !didDrawOnce) {
             invalidate();
         }
     }
@@ -74,6 +74,7 @@ class PageContentImageView extends View {
 
         if (bitmapSet) {
             canvas.drawBitmap(bitmap, null, rect, null);
+            didDrawOnce = true;
         }
     }
 }

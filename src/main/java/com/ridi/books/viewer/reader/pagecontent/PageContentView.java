@@ -118,7 +118,6 @@ class PageContentView extends ViewGroup {
         }
         
         setMeasuredDimension(width, height);
-        requestLayout();
     }
 
     @Override

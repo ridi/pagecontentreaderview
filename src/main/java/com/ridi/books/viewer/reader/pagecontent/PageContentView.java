@@ -211,7 +211,8 @@ class PageContentView extends ViewGroup {
                 fullView.setImageBitmap(result);
                 fullView.setVisibility(VISIBLE);
                 rendered = true;
-                invalidate();
+
+                requestLayout();
             }
             
             @Override
@@ -221,8 +222,6 @@ class PageContentView extends ViewGroup {
         };
 
         fullRenderingTask.execute();
-        
-        requestLayout();
     }
     
     void updateHighQuality() {
@@ -294,10 +293,7 @@ class PageContentView extends ViewGroup {
                         hqView.setImageBitmap(result.bitmap);
                         hqView.setVisibility(VISIBLE);
 
-                        // Calling requestLayout here doesn't lead to a later call to layout. No idea
-                        // why, but apparently others have run into the problem.
-                        hqView.layout(hqInfo.area.left, hqInfo.area.top, hqInfo.area.right, hqInfo.area.bottom);
-                        invalidate();
+                        requestLayout();
                     }
                 }
             };

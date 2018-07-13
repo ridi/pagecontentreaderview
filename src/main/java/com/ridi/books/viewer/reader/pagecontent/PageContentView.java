@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 class PageContentView extends ViewGroup {
     static final int NO_INDEX = Integer.MIN_VALUE;
@@ -22,10 +21,10 @@ class PageContentView extends ViewGroup {
     
     private PageContent pageContent;
     private AsyncTask<Void, Void, PageContent> contentLoadTask;
-    
-    private ImageView fullView;
+
+    private PageContentImageView fullView;
     private AsyncTask<Void, Void, Bitmap> fullRenderingTask;
-    private ImageView hqView;  // high quality view
+    private PageContentImageView hqView;  // high quality view
     private AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
     private HighQualityInfo hqInfo;
     private BitmapPostProcessor postProcessor;
@@ -44,10 +43,9 @@ class PageContentView extends ViewGroup {
         this.postProcessor = postProcessor;
 
         size = canvasSize;
-        fullView = new ImageView(context);
-        fullView.setBackgroundColor(paperColor);
+        fullView = new PageContentImageView(context);
+        fullView.setPaperColor(paperColor);
         fullView.setVisibility(INVISIBLE);
-        fullView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         addView(fullView);
     }
 
@@ -118,7 +116,6 @@ class PageContentView extends ViewGroup {
         }
         
         setMeasuredDimension(width, height);
-        requestLayout();
     }
 
     @Override
@@ -212,7 +209,8 @@ class PageContentView extends ViewGroup {
                 fullView.setImageBitmap(result);
                 fullView.setVisibility(VISIBLE);
                 rendered = true;
-                invalidate();
+
+                requestLayout();
             }
             
             @Override
@@ -222,8 +220,6 @@ class PageContentView extends ViewGroup {
         };
 
         fullRenderingTask.execute();
-        
-        requestLayout();
     }
     
     void updateHighQuality() {
@@ -260,10 +256,9 @@ class PageContentView extends ViewGroup {
 
             // Create and add the image view if not already done
             if (hqView == null) {
-                hqView = new ImageView(getContext());
-                hqView.setBackgroundColor(paperColor);
+                hqView = new PageContentImageView(getContext(), true);
+                hqView.setPaperColor(paperColor);
                 hqView.setVisibility(INVISIBLE);
-                hqView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 addView(hqView);
             }
 
@@ -294,11 +289,8 @@ class PageContentView extends ViewGroup {
                         hqInfo = result;
                         hqView.setImageBitmap(result.bitmap);
                         hqView.setVisibility(VISIBLE);
-                        
-                        // Calling requestLayout here doesn't lead to a later call to layout. No idea
-                        // why, but apparently others have run into the problem.
-                        hqView.layout(hqInfo.area.left, hqInfo.area.top, hqInfo.area.right, hqInfo.area.bottom);
-                        invalidate();
+
+                        requestLayout();
                     }
                 }
             };

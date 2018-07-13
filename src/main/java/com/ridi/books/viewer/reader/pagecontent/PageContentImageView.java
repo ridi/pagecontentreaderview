@@ -3,31 +3,25 @@ package com.ridi.books.viewer.reader.pagecontent;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Rect;
-import android.os.AsyncTask;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 
 class PageContentImageView extends View {
-    private boolean bitmapSet;
     private Bitmap bitmap;
     @ColorInt private int paperColor;
-    private ImageView.ScaleType scaleType;
     private Rect rect = new Rect();
-    private boolean isHighQualityView;
-    private boolean didDrawOnce;
+    private boolean highQualityView;
+    private boolean dirty;
 
     PageContentImageView(Context context) {
-        this(context, null);
+        this(context, false);
     }
 
-    PageContentImageView(Context context, boolean isHighQualityView) {
+    PageContentImageView(Context context, boolean highQualityView) {
         this(context, null);
-        this.isHighQualityView = isHighQualityView;
+        this.highQualityView = highQualityView;
     }
 
     private PageContentImageView(Context context, AttributeSet attrs) {
@@ -38,30 +32,22 @@ class PageContentImageView extends View {
         this.paperColor = paperColor;
     }
 
-    public void setScaleType(ImageView.ScaleType scaleType) {
-        this.scaleType = scaleType;
-    }
-
     public void setImageBitmap(Bitmap bitmap) {
-        if (this.bitmap != null) {
-            this.bitmap.recycle();
-        }
         this.bitmap = bitmap;
-        this.bitmapSet = (bitmap != null);
-        this.didDrawOnce = false;
+        dirty = true;
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
 
-        if (isHighQualityView) {
+        if (highQualityView) {
             rect.set(0, 0, right - left, bottom - top);
         } else {
             rect.set(left, top, right, bottom);
         }
 
-        if (bitmapSet && changed && !didDrawOnce) {
+        if ((bitmap != null) && changed && dirty) {
             invalidate();
         }
     }
@@ -72,9 +58,9 @@ class PageContentImageView extends View {
 
         canvas.drawColor(paperColor);
 
-        if (bitmapSet) {
+        if (bitmap != null) {
             canvas.drawBitmap(bitmap, null, rect, null);
-            didDrawOnce = true;
+            dirty = false;
         }
     }
 }

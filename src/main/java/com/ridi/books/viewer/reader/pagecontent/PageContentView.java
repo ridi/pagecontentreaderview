@@ -7,7 +7,6 @@ import android.os.AsyncTask;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 class PageContentView extends ViewGroup {
     static final int NO_INDEX = Integer.MIN_VALUE;
@@ -47,7 +46,6 @@ class PageContentView extends ViewGroup {
         fullView = new PageContentImageView(context);
         fullView.setPaperColor(paperColor);
         fullView.setVisibility(INVISIBLE);
-        fullView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         addView(fullView);
     }
 
@@ -261,7 +259,6 @@ class PageContentView extends ViewGroup {
                 hqView = new PageContentImageView(getContext(), true);
                 hqView.setPaperColor(paperColor);
                 hqView.setVisibility(INVISIBLE);
-                hqView.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 addView(hqView);
             }
 

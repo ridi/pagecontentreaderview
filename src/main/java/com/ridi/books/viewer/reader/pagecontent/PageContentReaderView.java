@@ -991,6 +991,11 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         requestLayout();
 
         PageContentView cv = childViews.get(currentIndex);
+
+        if (cv == null) {
+            return;
+        }
+
         Point cvOffset = subScreenSizeOffset(cv);
         int cvTop = cv.getTop() + scrollOffsetY;
 

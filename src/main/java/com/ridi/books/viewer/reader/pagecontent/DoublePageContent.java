@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 
+import java.util.List;
+
 public class DoublePageContent implements PageContent {
     private final PageContent leftPage;
     private final PageContent rightPage;
@@ -83,5 +85,11 @@ public class DoublePageContent implements PageContent {
         }
 
         return bitmap;
+    }
+
+    @Override
+    public List<PageLink> getPageLinkList() {
+        // TODO : 좌표를 계산해 left right 페이지의 link 들을 리턴해야함.
+        return null;
     }
 }

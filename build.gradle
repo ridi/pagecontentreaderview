@@ -1,4 +1,5 @@
 buildscript {
+    ext.kotlin_version = '1.3.10'
     repositories {
         jcenter()
         google()
@@ -6,6 +7,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.1.3'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -15,10 +17,15 @@ repositories {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'com.github.ridi'
 version = '1.3.2'
+
+configurations {
+    ktlint
+}
 
 android {
     compileSdkVersion 27
@@ -34,11 +41,34 @@ android {
 
 dependencies {
     implementation 'com.android.support:support-annotations:27.1.1'
+
+    ktlint 'com.github.shyiko:ktlint:0.29.0'
+    ktlint 'com.github.ridi:ktlint-ruleset:master-SNAPSHOT'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
+}
+
+afterEvaluate { project ->
+    check.dependsOn ktlint
+}
+
+task ktlintFormat(type: JavaExec, group: 'formatting') {
+    description = 'Fix Kotlin code style deviations.'
+    classpath = configurations.ktlint
+    main = 'com.github.shyiko.ktlint.Main'
+    args '-F', 'src/**/*.kt'
+}
+
+
+task ktlint(type: JavaExec, group: 'verification') {
+    description = 'Check Kotlin code style.'
+    classpath = configurations.ktlint
+    main = 'com.github.shyiko.ktlint.Main'
+    args 'src/**/*.kt'
 }
 
 artifacts {

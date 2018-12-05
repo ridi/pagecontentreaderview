@@ -3,7 +3,9 @@ package com.ridi.books.viewer.reader.pagecontent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.RectF;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DoublePageContent implements PageContent {
@@ -89,7 +91,25 @@ public class DoublePageContent implements PageContent {
 
     @Override
     public List<PageLink> getPageLinkList() {
-        // TODO : 좌표를 계산해 left right 페이지의 link 들을 리턴해야함.
-        return null;
+        ArrayList<PageLink> linkList = new ArrayList<>();
+        linkList.addAll(leftPage.getPageLinkList());
+        linkList.addAll(
+                offsetPageLinkList(
+                        rightPage.getPageLinkList(),
+                        leftPage.getSize().width,
+                        0f
+                )
+        );
+        return linkList;
+    }
+
+    private List<PageLink> offsetPageLinkList(List<PageLink> linkList, float offsetX, float offsetY) {
+        ArrayList<PageLink> copiedList = new ArrayList<>(linkList);
+        for (PageLink pageLink : copiedList) {
+            RectF rect = new RectF(pageLink.getBoundingRect());
+            rect.offset(offsetX, offsetY);
+            pageLink.setBoundingRect(rect);
+        }
+        return copiedList;
     }
 }

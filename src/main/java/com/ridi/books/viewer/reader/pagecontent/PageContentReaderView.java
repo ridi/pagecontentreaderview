@@ -1362,4 +1362,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         }
         return indexList;
     }
+
+    public PageContentView.Size getRenderSize() {
+        return childViews.get(currentIndex).getRenderSize();
+    }
 }

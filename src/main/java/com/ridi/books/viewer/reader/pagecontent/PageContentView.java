@@ -373,4 +373,8 @@ class PageContentView extends ViewGroup {
             return bitmap;
         }
     }
+
+    public Size getRenderSize() {
+        return size;
+    }
 }

@@ -94,20 +94,19 @@ public class DoublePageContent implements PageContent {
         ArrayList<PageLink> linkList = new ArrayList<>();
         linkList.addAll(leftPage.getPageLinkList());
         linkList.addAll(
-                offsetPageLinkList(
+                verticalOffsetPageLinkList(
                         rightPage.getPageLinkList(),
-                        leftPage.getSize().width,
-                        0f
+                        leftPage.getSize().width
                 )
         );
         return linkList;
     }
 
-    private List<PageLink> offsetPageLinkList(List<PageLink> linkList, float offsetX, float offsetY) {
+    private List<PageLink> verticalOffsetPageLinkList(List<PageLink> linkList, float offsetX) {
         ArrayList<PageLink> copiedList = new ArrayList<>(linkList);
         for (PageLink pageLink : copiedList) {
             RectF rect = new RectF(pageLink.getBoundingRect());
-            rect.offset(offsetX, offsetY);
+            rect.offset(offsetX, 0f);
             pageLink.setBoundingRect(rect);
         }
         return copiedList;

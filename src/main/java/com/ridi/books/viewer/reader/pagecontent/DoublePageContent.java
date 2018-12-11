@@ -91,7 +91,7 @@ public class DoublePageContent implements PageContent {
 
     @Override
     public List<PageLink> getPageLinkList() {
-        ArrayList<PageLink> linkList = new ArrayList<>();
+        List<PageLink> linkList = new ArrayList<>();
         linkList.addAll(leftPage.getPageLinkList());
         linkList.addAll(
                 horizontalOffsetPageLinkList(
@@ -103,7 +103,7 @@ public class DoublePageContent implements PageContent {
     }
 
     private List<PageLink> horizontalOffsetPageLinkList(List<PageLink> linkList, float offsetX) {
-        ArrayList<PageLink> copiedList = new ArrayList<>(linkList);
+        List<PageLink> copiedList = new ArrayList<>(linkList);
         for (PageLink pageLink : copiedList) {
             RectF rect = new RectF(pageLink.getBoundingRect());
             rect.offset(offsetX, 0f);

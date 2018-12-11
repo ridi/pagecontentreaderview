@@ -1356,7 +1356,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
 
     public List<Integer> getVisibleChildIndexList() {
-        ArrayList<Integer> indexList = new ArrayList<>();
+        List<Integer> indexList = new ArrayList<>();
         for (int i = 0; i < childViews.size(); i++) {
             indexList.add(childViews.keyAt(i));
         }

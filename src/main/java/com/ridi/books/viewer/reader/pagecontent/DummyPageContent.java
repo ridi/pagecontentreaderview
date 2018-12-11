@@ -2,7 +2,7 @@ package com.ridi.books.viewer.reader.pagecontent;
 
 import android.graphics.Bitmap;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 // 두쪽보기에서 한 페이지밖에 없을때 존재하지 않는 페이지를 위한 dummy content
@@ -27,6 +27,6 @@ class DummyPageContent implements PageContent {
 
     @Override
     public List<PageLink> getPageLinkList() {
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 }

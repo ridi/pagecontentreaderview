@@ -322,7 +322,7 @@ class PageContentView extends ViewGroup {
         return index;
     }
     
-    boolean isRendered() {
+    public boolean isRendered() {
         return rendered;
     }
     

@@ -10,5 +10,5 @@ public interface PageContent {
     @WorkerThread
     Bitmap renderToBitmap(int bitmapWidth, int bitmapHeight, int startX,
                           int startY, int pageWidth, int pageHeight, boolean forHighQuality);
-    List<PageLink> getPageLinkList();
+    List<Link> getLinkList();
 }

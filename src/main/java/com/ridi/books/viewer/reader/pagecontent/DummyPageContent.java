@@ -26,7 +26,7 @@ class DummyPageContent implements PageContent {
     }
 
     @Override
-    public List<PageLink> getPageLinkList() {
+    public List<Link> getLinkList() {
         return Collections.emptyList();
     }
 }

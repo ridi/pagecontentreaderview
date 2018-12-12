@@ -96,7 +96,7 @@ public class DoublePageContent implements PageContent {
         linkList.addAll(
                 horizontalOffsetLinkList(
                         rightPage.getLinkList(),
-                        size.width / 2
+                        leftPage.getSize().width
                 )
         );
         return linkList;

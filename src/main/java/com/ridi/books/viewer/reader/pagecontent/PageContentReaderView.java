@@ -1354,4 +1354,16 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
 
         return new Point(view.getLeft(), view.getTop());
     }
+
+    public List<Integer> getVisibleChildIndexList() {
+        List<Integer> indexList = new ArrayList<>();
+        for (int i = 0; i < childViews.size(); i++) {
+            indexList.add(childViews.keyAt(i));
+        }
+        return indexList;
+    }
+
+    public PageContentView.Size getRenderSize() {
+        return childViews.get(currentIndex).getRenderSize();
+    }
 }

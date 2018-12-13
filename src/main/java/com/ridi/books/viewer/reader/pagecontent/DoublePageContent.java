@@ -3,6 +3,10 @@ package com.ridi.books.viewer.reader.pagecontent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.RectF;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DoublePageContent implements PageContent {
     private final PageContent leftPage;
@@ -83,5 +87,28 @@ public class DoublePageContent implements PageContent {
         }
 
         return bitmap;
+    }
+
+    @Override
+    public List<Link> getLinkList() {
+        List<Link> linkList = new ArrayList<>();
+        linkList.addAll(leftPage.getLinkList());
+        linkList.addAll(
+                horizontalOffsetLinkList(
+                        rightPage.getLinkList(),
+                        leftPage.getSize().width
+                )
+        );
+        return linkList;
+    }
+
+    private List<Link> horizontalOffsetLinkList(List<Link> linkList, float offsetX) {
+        List<Link> copiedList = new ArrayList<>(linkList);
+        for (Link link : copiedList) {
+            RectF rect = new RectF(link.getBoundingRect());
+            rect.offset(offsetX, 0f);
+            link.setBoundingRect(rect);
+        }
+        return copiedList;
     }
 }

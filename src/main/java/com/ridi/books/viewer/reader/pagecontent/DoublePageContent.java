@@ -103,12 +103,15 @@ public class DoublePageContent implements PageContent {
     }
 
     private List<Link> horizontalOffsetLinkList(List<Link> linkList, float offsetX) {
-        List<Link> copiedList = new ArrayList<>(linkList);
-        for (Link link : copiedList) {
-            RectF rect = new RectF(link.getBoundingRect());
+        List<Link> appendedLinkList = new ArrayList<>();
+        for (Link link : linkList) {
+            Link copiedLink = new Link(link.getAction(), link.getTarget(), link.getBoundingRect());
+            RectF rect = new RectF(copiedLink.getBoundingRect());
             rect.offset(offsetX, 0f);
-            link.setBoundingRect(rect);
+            copiedLink.setBoundingRect(rect);
+
+            appendedLinkList.add(copiedLink);
         }
-        return copiedList;
+        return appendedLinkList;
     }
 }

@@ -1364,6 +1364,13 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     }
 
     public PageContentView.Size getRenderSize() {
-        return childViews.get(currentIndex).getRenderSize();
+        PageContentView currentView = childViews.get(currentIndex);
+        if (currentView != null) {
+            return childViews.get(currentIndex).getRenderSize();
+        } else {
+            // TODO : 원인 확인 필요
+            // 알 수 없는 이유로 current index가 비어있을경우 사이즈가 같을 가능성이 높은 첫번재 뷰의 값을 리턴함.
+            return childViews.get(childViews.keyAt(0)).getRenderSize();
+        }
     }
 }

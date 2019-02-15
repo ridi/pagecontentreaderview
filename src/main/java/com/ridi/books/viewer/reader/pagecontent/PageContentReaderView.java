@@ -1376,4 +1376,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             return new PageContentView.Size(1, 1);
         }
     }
+
+    public boolean isCurrentViewExist() {
+        return childViews.get(currentIndex) != null;
+    }
 }

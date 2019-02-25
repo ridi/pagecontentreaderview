@@ -8,7 +8,7 @@ import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 
-class PageContentView extends ViewGroup {
+public class PageContentView extends ViewGroup {
     static final int NO_INDEX = Integer.MIN_VALUE;
 
     private int index;

@@ -8,7 +8,7 @@ import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
 import android.view.View;
 
-class PageContentImageView extends View {
+public class PageContentImageView extends View {
     private Bitmap bitmap;
     @ColorInt private int paperColor;
     private Rect rect = new Rect();

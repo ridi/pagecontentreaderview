@@ -59,6 +59,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         void onCurrentIndexChanged();
         void onTryOverFirstPage();
         void onTryOverLastPage();
+        void onTouchUp();
     }
 
     private PageContentViewAdapter adapter;
@@ -97,6 +98,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     private int scrollerLastX;
     private int scrollerLastY;
     private boolean scrollDisabled;
+    private boolean isExternalGestureMode = false;
     
     private boolean userInteracting;
     private boolean sliding;
@@ -777,7 +779,9 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        scaleGestureDetector.onTouchEvent(event);
+        if (!isExternalGestureMode) {
+            scaleGestureDetector.onTouchEvent(event);
+        }
 
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
             PageContentView view = childViews.get(currentIndex);
@@ -793,6 +797,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
             userInteracting = true;
         } else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+            isExternalGestureMode = false;
             scrollDisabled = false;
             
             if (scrollMode) {
@@ -846,6 +851,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                 }
             }
             touchStartOffset = null;
+            listener.onTouchUp();
         }
         return true;
     }
@@ -963,8 +969,10 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
         if (!scrollDisabled) {
-            if (scale == DEFAULT_SCALE && !scrollMode) {
-                if (listener.onScrollWithoutScaling(e1, e2, distanceX, distanceY)) {
+            if (scale == DEFAULT_SCALE && !scrollMode && !scaleGestureDetector.isInProgress()) {
+                boolean result = listener.onScrollWithoutScaling(e1, e2, distanceX, distanceY);
+                isExternalGestureMode |= result;
+                if (result) {
                     return true;
                 }
             }

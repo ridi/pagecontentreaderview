@@ -283,16 +283,17 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
     
     private Point subScreenSizeOffset(PageContentView view) {
         int x = Math.max((getWidth() - view.getMeasuredWidth()) / 2, 0);
+        int y = getHeight() - view.getMeasuredHeight();
         if (scrollMode) {
             if ((reverseMode && view.getIndex() == adapter.getCount() - 1)
                     || (!reverseMode && view.getIndex() == 0)) {
                 return new Point(x, 0);
             } else if ((reverseMode && view.getIndex() == 0)
                     || (!reverseMode && view.getIndex() == adapter.getCount() - 1)) {
-                return new Point(x, getHeight() - view.getMeasuredHeight());
+                return new Point(x, y);
             }
         }
-        return new Point(x, Math.max((getHeight() - view.getMeasuredHeight()) / 2, 0));
+        return new Point(x, Math.max(y / 2, 0));
     }
     
     private View getCached() {

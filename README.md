@@ -1,6 +1,6 @@
 # PageContentReaderView
 
-[![Build Status](https://travis-ci.org/ridi/pagecontentreaderview.svg?branch=master)](https://travis-ci.org/ridi/pagecontentreaderview)
+[![Build Status](https://travis-ci.com/ridi/pagecontentreaderview.svg?branch=master)](https://travis-ci.org/ridi/pagecontentreaderview)
 [![Release](https://jitpack.io/v/ridi/pagecontentreaderview.svg)](https://jitpack.io/#ridi/pagecontentreaderview)
 
 ## Getting started

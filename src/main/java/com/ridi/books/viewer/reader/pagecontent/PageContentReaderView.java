@@ -523,10 +523,8 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
             // Move to next or previous if current is sufficiently off center
             if (cv != null && scrollMode && !sliding) {
                 cvOffset = subScreenSizeOffset(cv);
-                int height;
-                if (getHeight() >= getWidth()) {
-                    height = getHeight();
-                } else {
+                int height = getHeight();
+                if (getWidth() >= getHeight()) {
                     height = getWidth();
                 }
                 if (cv.getTop() + cv.getMeasuredHeight() + cvOffset.y

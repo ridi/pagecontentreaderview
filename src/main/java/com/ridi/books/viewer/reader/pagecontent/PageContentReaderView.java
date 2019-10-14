@@ -526,8 +526,7 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
                     + pageGapPixels * scale / 2 + scrollOffsetY < getHeight() / 2) {
                     setCurrentIndexToRightOrDown();
                 }
-                if (cv.getTop()
-                    - pageGapPixels * scale / 2 + scrollOffsetY >= getHeight() / 2) {
+                if (cv.getTop() - pageGapPixels * scale / 2 + scrollOffsetY >= getHeight() / 2) {
                     setCurrentIndexToLeftOrUp();
                 }
             }

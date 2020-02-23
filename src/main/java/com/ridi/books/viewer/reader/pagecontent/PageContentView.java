@@ -28,12 +28,15 @@ public class PageContentView extends ViewGroup {
     private AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
     private HighQualityInfo hqInfo;
     private BitmapPostProcessor postProcessor;
-    
+    private ViewGroup loadingProgressBar;
+    private ViewGroup loadFailedView;
+    private LoadingState loadingState;
+
     private boolean rendered;
 
     PageContentView(Context context, int canvasWidth, int canvasHeight, @ColorInt int paperColor,
                     FitPolicy fitPolicy, BackgroundTaskListener backgroundTaskListener,
-                    BitmapPostProcessor postProcessor) {
+                    BitmapPostProcessor postProcessor, ViewGroup loadingProgressBar, ViewGroup loadFailedView) {
         this(context, null);
         this.index = NO_INDEX;
         this.canvasSize = new Size(canvasWidth, canvasHeight);
@@ -41,12 +44,18 @@ public class PageContentView extends ViewGroup {
         this.fitPolicy = fitPolicy;
         this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessor = postProcessor;
+        this.loadingProgressBar = loadingProgressBar;
+        this.loadFailedView = loadFailedView;
 
         size = canvasSize;
         fullView = new PageContentImageView(context);
         fullView.setPaperColor(paperColor);
         fullView.setVisibility(INVISIBLE);
+        this.loadingProgressBar.setVisibility(INVISIBLE);
+        this.loadFailedView.setVisibility(INVISIBLE);
         addView(fullView);
+        addView(this.loadingProgressBar);
+        addView(this.loadFailedView);
     }
 
     private PageContentView(Context context, AttributeSet attrs) {
@@ -124,7 +133,10 @@ public class PageContentView extends ViewGroup {
         int height = bottom - top;
 
         fullView.layout(0, 0, width, height);
-
+        loadingProgressBar.layout(0, 0, width, height);
+        adjustChildLayout(loadingProgressBar, width, height);
+        loadFailedView.layout(0, 0, width, height);
+        adjustChildLayout(loadFailedView, width, height);
         if (hqInfo != null) {
             if (hqInfo.size.width != width || hqInfo.size.height != height) {
                 // Zoomed since patch was created
@@ -133,6 +145,17 @@ public class PageContentView extends ViewGroup {
             } else {
                 hqView.layout(hqInfo.area.left, hqInfo.area.top, hqInfo.area.right, hqInfo.area.bottom);
             }
+        }
+    }
+
+    private void adjustChildLayout(ViewGroup parent,int parentWidth, int parentHeight){
+        for (int i = 0; i < parent.getChildCount(); i++) {
+            parent.getChildAt(i).measure(0, 0);
+            int childWidth = parent.getChildAt(i).getMeasuredWidth();
+            int childHeight = parent.getChildAt(i).getMeasuredHeight();
+            parent.getChildAt(i).layout(
+                (parentWidth - childWidth) / 2, (parentHeight - childHeight) / 2,
+                (parentWidth + childWidth) / 2, (parentHeight + childHeight) / 2);
         }
     }
     
@@ -208,7 +231,13 @@ public class PageContentView extends ViewGroup {
                 onCompleteBackgroundTask();
                 fullView.setImageBitmap(result);
                 fullView.setVisibility(VISIBLE);
-                rendered = true;
+                if (result != null) {
+                    rendered = true;
+                    hideLoadView();
+                } else {
+                    rendered = false;
+                    showLoadView(loadingState);
+                }
 
                 requestLayout();
             }
@@ -325,7 +354,24 @@ public class PageContentView extends ViewGroup {
     public boolean isRendered() {
         return rendered;
     }
-    
+
+    public void hideLoadView() {
+        loadingProgressBar.setVisibility(INVISIBLE);
+        loadFailedView.setVisibility(INVISIBLE);
+    }
+
+    public void showLoadView(LoadingState loadingState) {
+        if (loadingState == LoadingState.LOADING) {
+            loadingProgressBar.setVisibility(VISIBLE);
+        } else {
+            loadFailedView.setVisibility(VISIBLE);
+        }
+    }
+
+    public void setLoadingState(LoadingState state) {
+        loadingState = state;
+    }
+
     @Override
     public boolean isOpaque() {
         return true;

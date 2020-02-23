@@ -1,11 +1,11 @@
 package com.ridi.books.viewer.reader.pagecontent;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.annotation.ColorInt;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ProgressBar;
 
 public abstract class PageContentViewAdapter extends BaseAdapter {
     private final Context context;
@@ -35,10 +35,11 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
         if (convertView == null) {
             view = new PageContentView(context, parent.getWidth(), parent.getHeight(),
                     getPaperColor(), getFitPolicy(),
-                    getBackgroundTaskListener(), getBitmapPostProcessor());
+                    getBackgroundTaskListener(), getBitmapPostProcessor(), getLoadingProgressBar(), getLoadFailedView());
         } else {
             view = (PageContentView) convertView;
         }
+        view.setLoadingState(getLoadingState());
         view.loadPageContent(getPageContentProvider(), position);
         return view;
     }
@@ -57,4 +58,10 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
     protected abstract BackgroundTaskListener getBackgroundTaskListener();
 
     protected abstract BitmapPostProcessor getBitmapPostProcessor();
+
+    protected abstract LoadingState getLoadingState();
+
+    protected abstract ViewGroup getLoadingProgressBar();
+
+    protected abstract ViewGroup getLoadFailedView();
 }

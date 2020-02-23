@@ -229,14 +229,15 @@ public class PageContentView extends ViewGroup {
             @Override
             protected void onPostExecute(Bitmap result) {
                 onCompleteBackgroundTask();
-                fullView.setImageBitmap(result);
-                fullView.setVisibility(VISIBLE);
                 if (result != null) {
                     rendered = true;
                     hideLoadView();
+                    fullView.setImageBitmap(result);
+                    fullView.setVisibility(VISIBLE);
                 } else {
                     rendered = false;
                     showLoadView(loadingState);
+                    fullView.setVisibility(INVISIBLE);
                 }
 
                 requestLayout();

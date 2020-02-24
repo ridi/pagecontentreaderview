@@ -15,7 +15,6 @@ public class PageContentView extends ViewGroup {
     private Size canvasSize;
     @ColorInt private int paperColor;
     private FitPolicy fitPolicy;
-    private BackgroundTaskListener backgroundTaskListener;
 
     private Size size;
     
@@ -35,14 +34,13 @@ public class PageContentView extends ViewGroup {
     private boolean rendered;
 
     PageContentView(Context context, int canvasWidth, int canvasHeight, @ColorInt int paperColor,
-                    FitPolicy fitPolicy, BackgroundTaskListener backgroundTaskListener,
-                    BitmapPostProcessor postProcessor, ViewGroup loadingProgressBar, ViewGroup loadFailedView) {
+                    FitPolicy fitPolicy, BitmapPostProcessor postProcessor,
+                    ViewGroup loadingProgressBar, ViewGroup loadFailedView) {
         this(context, null);
         this.index = NO_INDEX;
         this.canvasSize = new Size(canvasWidth, canvasHeight);
         this.paperColor = paperColor;
         this.fitPolicy = fitPolicy;
-        this.backgroundTaskListener = backgroundTaskListener;
         this.postProcessor = postProcessor;
         this.loadingProgressBar = loadingProgressBar;
         this.loadFailedView = loadFailedView;
@@ -87,18 +85,6 @@ public class PageContentView extends ViewGroup {
         fullView.setImageBitmap(null);
         fullView.setVisibility(INVISIBLE);
         hideHqViewIfExists();
-    }
-    
-    private void onStartBackgroundTask() {
-        if (backgroundTaskListener != null) {
-            backgroundTaskListener.onStartBackgroundTask();
-        }
-    }
-    
-    private void onCompleteBackgroundTask() {
-        if (backgroundTaskListener != null) {
-            backgroundTaskListener.onCompleteBackgroundTask();
-        }
     }
     
     @Override
@@ -166,7 +152,7 @@ public class PageContentView extends ViewGroup {
         contentLoadTask = new AsyncTask<Void, Void, PageContent>() {
             @Override
             protected void onPreExecute() {
-                onStartBackgroundTask();
+                loadingProgressBar.setVisibility(VISIBLE);
             }
             
             @Override
@@ -176,13 +162,7 @@ public class PageContentView extends ViewGroup {
             
             @Override
             protected void onPostExecute(PageContent result) {
-                onCompleteBackgroundTask();
                 setPageContent(result);
-            }
-            
-            @Override
-            protected void onCancelled() {
-                onCompleteBackgroundTask();
             }
         };
         
@@ -209,11 +189,6 @@ public class PageContentView extends ViewGroup {
         // Render the page in the background
         fullRenderingTask = new AsyncRenderingTask<Void, Void, Bitmap>() {
             @Override
-            protected void onPreExecute() {
-                onStartBackgroundTask();
-            }
-
-            @Override
             protected Bitmap doInBackground(Void... params) {
                 PageContent pageContent = PageContentView.this.pageContent;
 
@@ -228,7 +203,6 @@ public class PageContentView extends ViewGroup {
 
             @Override
             protected void onPostExecute(Bitmap result) {
-                onCompleteBackgroundTask();
                 if (result != null) {
                     rendered = true;
                     hideLoadView();
@@ -241,11 +215,6 @@ public class PageContentView extends ViewGroup {
                 }
 
                 requestLayout();
-            }
-            
-            @Override
-            protected void onCancelled() {
-                onCompleteBackgroundTask();
             }
         };
 
@@ -364,7 +333,9 @@ public class PageContentView extends ViewGroup {
     public void showLoadView(LoadingState loadingState) {
         if (loadingState == LoadingState.LOADING) {
             loadingProgressBar.setVisibility(VISIBLE);
+            loadFailedView.setVisibility(INVISIBLE);
         } else {
+            loadingProgressBar.setVisibility(INVISIBLE);
             loadFailedView.setVisibility(VISIBLE);
         }
     }

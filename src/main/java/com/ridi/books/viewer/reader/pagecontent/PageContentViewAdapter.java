@@ -35,7 +35,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
         if (convertView == null) {
             view = new PageContentView(context, parent.getWidth(), parent.getHeight(),
                     getPaperColor(), getFitPolicy(),
-                    getBackgroundTaskListener(), getBitmapPostProcessor(), getLoadingProgressBar(), getLoadFailedView());
+                    getBitmapPostProcessor(), getLoadingProgressBar(), getLoadFailedView());
         } else {
             view = (PageContentView) convertView;
         }
@@ -54,8 +54,6 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
     protected abstract int getPaperColor();
 
     protected abstract FitPolicy getFitPolicy();
-
-    protected abstract BackgroundTaskListener getBackgroundTaskListener();
 
     protected abstract BitmapPostProcessor getBitmapPostProcessor();
 

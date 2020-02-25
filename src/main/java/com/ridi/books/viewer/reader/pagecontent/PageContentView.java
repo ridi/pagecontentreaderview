@@ -29,7 +29,7 @@ public class PageContentView extends ViewGroup {
     private BitmapPostProcessor postProcessor;
     private ViewGroup loadingProgressBar;
     private ViewGroup loadFailedView;
-    private LoadingState loadingState;
+    private LoadState loadState;
 
     private boolean rendered;
 
@@ -152,7 +152,7 @@ public class PageContentView extends ViewGroup {
         contentLoadTask = new AsyncTask<Void, Void, PageContent>() {
             @Override
             protected void onPreExecute() {
-                loadingProgressBar.setVisibility(VISIBLE);
+                setLoadState(LoadState.LOADING);
             }
             
             @Override
@@ -205,13 +205,13 @@ public class PageContentView extends ViewGroup {
             protected void onPostExecute(Bitmap result) {
                 if (result != null) {
                     rendered = true;
-                    hideLoadView();
                     fullView.setImageBitmap(result);
                     fullView.setVisibility(VISIBLE);
+                    setLoadState(LoadState.LOADED);
                 } else {
                     rendered = false;
-                    showLoadView(loadingState);
                     fullView.setVisibility(INVISIBLE);
+                    setLoadState(loadState);
                 }
 
                 requestLayout();
@@ -325,23 +325,19 @@ public class PageContentView extends ViewGroup {
         return rendered;
     }
 
-    public void hideLoadView() {
+    private void updateLoadView(LoadState loadingState) {
         loadingProgressBar.setVisibility(INVISIBLE);
         loadFailedView.setVisibility(INVISIBLE);
-    }
-
-    public void showLoadView(LoadingState loadingState) {
-        if (loadingState == LoadingState.LOADING) {
+        if (loadingState == LoadState.LOADING) {
             loadingProgressBar.setVisibility(VISIBLE);
-            loadFailedView.setVisibility(INVISIBLE);
-        } else {
-            loadingProgressBar.setVisibility(INVISIBLE);
+        } else if (loadingState == LoadState.LOAD_FAILED){
             loadFailedView.setVisibility(VISIBLE);
         }
     }
 
-    public void setLoadingState(LoadingState state) {
-        loadingState = state;
+    public void setLoadState(LoadState state) {
+        loadState = state;
+        updateLoadView(loadState);
     }
 
     @Override

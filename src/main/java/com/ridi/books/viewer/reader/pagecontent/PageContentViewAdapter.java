@@ -5,7 +5,6 @@ import android.support.annotation.ColorInt;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ProgressBar;
 
 public abstract class PageContentViewAdapter extends BaseAdapter {
     private final Context context;
@@ -39,7 +38,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
         } else {
             view = (PageContentView) convertView;
         }
-        view.setLoadingState(getLoadingState());
+        view.setLoadState(getLoadState());
         view.loadPageContent(getPageContentProvider(), position);
         return view;
     }
@@ -57,7 +56,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
 
     protected abstract BitmapPostProcessor getBitmapPostProcessor();
 
-    protected abstract LoadingState getLoadingState();
+    protected abstract LoadState getLoadState();
 
     protected abstract ViewGroup getLoadingProgressBar();
 

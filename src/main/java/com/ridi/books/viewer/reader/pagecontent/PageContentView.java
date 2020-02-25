@@ -207,7 +207,7 @@ public class PageContentView extends ViewGroup {
                     rendered = true;
                     fullView.setImageBitmap(result);
                     fullView.setVisibility(VISIBLE);
-                    setLoadState(LoadState.LOADED);
+                    setLoadState(LoadState.LOAD_COMPLETED);
                 } else {
                     rendered = false;
                     fullView.setVisibility(INVISIBLE);

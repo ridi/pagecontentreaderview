@@ -3,5 +3,5 @@ package com.ridi.books.viewer.reader.pagecontent
 enum class LoadState {
     LOADING,
     LOAD_FAILED,
-    LOADED
+    LOAD_COMPLETED
 }

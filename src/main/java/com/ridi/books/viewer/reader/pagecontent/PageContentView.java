@@ -335,7 +335,7 @@ public class PageContentView extends ViewGroup {
         }
     }
 
-    public void setLoadState(LoadState state) {
+    protected void setLoadState(LoadState state) {
         loadState = state;
         updateLoadView(loadState);
     }

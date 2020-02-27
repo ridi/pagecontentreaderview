@@ -58,7 +58,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
 
     protected abstract LoadState getFinalLoadState();
 
-    protected abstract ViewGroup getLoadingProgressBar();
+    protected abstract View getLoadingProgressBar();
 
-    protected abstract ViewGroup getLoadFailedView();
+    protected abstract View getLoadFailedView();
 }

@@ -6,6 +6,7 @@ import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
 
 public class PageContentView extends ViewGroup {
@@ -27,8 +28,8 @@ public class PageContentView extends ViewGroup {
     private AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
     private HighQualityInfo hqInfo;
     private BitmapPostProcessor postProcessor;
-    private ViewGroup loadingProgressBar;
-    private ViewGroup loadFailedView;
+    private View loadingProgressBar;
+    private View loadFailedView;
     private LoadState loadState;
     private LoadState finalLoadState;
 
@@ -36,7 +37,7 @@ public class PageContentView extends ViewGroup {
 
     PageContentView(Context context, int canvasWidth, int canvasHeight, @ColorInt int paperColor,
                     FitPolicy fitPolicy, BitmapPostProcessor postProcessor,
-                    ViewGroup loadingProgressBar, ViewGroup loadFailedView) {
+                    View loadingProgressBar, View loadFailedView) {
         this(context, null);
         this.index = NO_INDEX;
         this.canvasSize = new Size(canvasWidth, canvasHeight);
@@ -120,10 +121,16 @@ public class PageContentView extends ViewGroup {
         int height = bottom - top;
 
         fullView.layout(0, 0, width, height);
-        loadingProgressBar.layout(0, 0, width, height);
-        adjustChildLayout(loadingProgressBar, width, height);
-        loadFailedView.layout(0, 0, width, height);
-        adjustChildLayout(loadFailedView, width, height);
+        loadingProgressBar.measure(0, 0);
+        loadingProgressBar.layout((width - loadingProgressBar.getMeasuredWidth()) / 2,
+            (height - loadingProgressBar.getMeasuredHeight()) / 2,
+            (width + loadingProgressBar.getMeasuredWidth()) / 2,
+            (height + loadingProgressBar.getMeasuredHeight()) / 2);
+        loadFailedView.measure(0, 0);
+        loadFailedView.layout((width - loadFailedView.getMeasuredWidth()) / 2,
+            (height - loadFailedView.getMeasuredHeight()) / 2,
+            (width + loadFailedView.getMeasuredWidth()) / 2,
+            (height + loadFailedView.getMeasuredHeight()) / 2);
         if (hqInfo != null) {
             if (hqInfo.size.width != width || hqInfo.size.height != height) {
                 // Zoomed since patch was created
@@ -132,17 +139,6 @@ public class PageContentView extends ViewGroup {
             } else {
                 hqView.layout(hqInfo.area.left, hqInfo.area.top, hqInfo.area.right, hqInfo.area.bottom);
             }
-        }
-    }
-
-    private void adjustChildLayout(ViewGroup parent,int parentWidth, int parentHeight){
-        for (int i = 0; i < parent.getChildCount(); i++) {
-            parent.getChildAt(i).measure(0, 0);
-            int childWidth = parent.getChildAt(i).getMeasuredWidth();
-            int childHeight = parent.getChildAt(i).getMeasuredHeight();
-            parent.getChildAt(i).layout(
-                (parentWidth - childWidth) / 2, (parentHeight - childHeight) / 2,
-                (parentWidth + childWidth) / 2, (parentHeight + childHeight) / 2);
         }
     }
     
@@ -326,12 +322,12 @@ public class PageContentView extends ViewGroup {
         return rendered;
     }
 
-    private void updateLoadView(LoadState loadingState) {
+    private void updateLoadView(LoadState state) {
         loadingProgressBar.setVisibility(INVISIBLE);
         loadFailedView.setVisibility(INVISIBLE);
-        if (loadingState == LoadState.LOADING) {
+        if (state == LoadState.LOADING) {
             loadingProgressBar.setVisibility(VISIBLE);
-        } else if (loadingState == LoadState.LOAD_FAILED){
+        } else if (state == LoadState.LOAD_FAILED){
             loadFailedView.setVisibility(VISIBLE);
         }
     }

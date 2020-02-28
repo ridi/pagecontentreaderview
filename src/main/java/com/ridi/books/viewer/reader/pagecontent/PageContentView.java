@@ -338,6 +338,9 @@ public class PageContentView extends FrameLayout {
     }
 
     void setInvalidContentLoadState(LoadState state) {
+        if (state == LoadState.LOAD_COMPLETED) {
+            throw new IllegalArgumentException();
+        }
         invalidContentLoadState = state;
     }
 

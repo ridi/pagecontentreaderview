@@ -121,16 +121,8 @@ public class PageContentView extends ViewGroup {
         int height = bottom - top;
 
         fullView.layout(0, 0, width, height);
-        loadingProgressBar.measure(0, 0);
-        loadingProgressBar.layout((width - loadingProgressBar.getMeasuredWidth()) / 2,
-            (height - loadingProgressBar.getMeasuredHeight()) / 2,
-            (width + loadingProgressBar.getMeasuredWidth()) / 2,
-            (height + loadingProgressBar.getMeasuredHeight()) / 2);
-        loadFailedView.measure(0, 0);
-        loadFailedView.layout((width - loadFailedView.getMeasuredWidth()) / 2,
-            (height - loadFailedView.getMeasuredHeight()) / 2,
-            (width + loadFailedView.getMeasuredWidth()) / 2,
-            (height + loadFailedView.getMeasuredHeight()) / 2);
+        adjustChildView(loadingProgressBar, width, height);
+        adjustChildView(loadFailedView, width, height);
         if (hqInfo != null) {
             if (hqInfo.size.width != width || hqInfo.size.height != height) {
                 // Zoomed since patch was created
@@ -140,6 +132,14 @@ public class PageContentView extends ViewGroup {
                 hqView.layout(hqInfo.area.left, hqInfo.area.top, hqInfo.area.right, hqInfo.area.bottom);
             }
         }
+    }
+
+    private void adjustChildView(View childView, int parentWidth, int parentHeight) {
+        childView.measure(0, 0);
+        childView.layout((parentWidth - childView.getMeasuredWidth()) / 2,
+            (parentHeight - childView.getMeasuredHeight()) / 2,
+            (parentWidth + childView.getMeasuredWidth()) / 2,
+            (parentHeight + childView.getMeasuredHeight()) / 2);
     }
     
     void loadPageContent(final PageContentProvider provider, final int index) {

@@ -322,19 +322,19 @@ public class PageContentView extends ViewGroup {
         return rendered;
     }
 
-    private void updateLoadView(LoadState state) {
+    private void updateLoadView() {
         loadingProgressBar.setVisibility(INVISIBLE);
         loadFailedView.setVisibility(INVISIBLE);
-        if (state == LoadState.LOADING) {
+        if (loadState == LoadState.LOADING) {
             loadingProgressBar.setVisibility(VISIBLE);
-        } else if (state == LoadState.LOAD_FAILED){
+        } else if (loadState == LoadState.LOAD_FAILED){
             loadFailedView.setVisibility(VISIBLE);
         }
     }
 
     private void setLoadState(LoadState state) {
         loadState = state;
-        updateLoadView(loadState);
+        updateLoadView();
     }
 
     void setFinalLoadState(LoadState finalState) {

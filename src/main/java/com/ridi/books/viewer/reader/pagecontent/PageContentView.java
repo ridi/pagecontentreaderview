@@ -6,10 +6,11 @@ import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
-public class PageContentView extends ViewGroup {
+public class PageContentView extends FrameLayout {
     static final int NO_INDEX = Integer.MIN_VALUE;
 
     private int index;
@@ -32,6 +33,7 @@ public class PageContentView extends ViewGroup {
     private View loadFailedView;
     private LoadState loadState;
     private LoadState invalidContentLoadState;
+    private LayoutParams layoutParams;
 
     private boolean rendered;
 
@@ -53,6 +55,10 @@ public class PageContentView extends ViewGroup {
         fullView.setVisibility(INVISIBLE);
         this.loadingProgressBar.setVisibility(INVISIBLE);
         this.loadFailedView.setVisibility(INVISIBLE);
+        layoutParams = new FrameLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.CENTER;
+        this.loadingProgressBar.setLayoutParams(layoutParams);
+        this.loadFailedView.setLayoutParams(layoutParams);
         addView(fullView);
         addView(this.loadingProgressBar);
         addView(this.loadFailedView);
@@ -91,6 +97,8 @@ public class PageContentView extends ViewGroup {
     
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         int width, height;
         
         switch(MeasureSpec.getMode(widthMeasureSpec)) {
@@ -117,12 +125,12 @@ public class PageContentView extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
         int width = right - left;
         int height = bottom - top;
 
         fullView.layout(0, 0, width, height);
-        adjustChildView(loadingProgressBar, width, height);
-        adjustChildView(loadFailedView, width, height);
         if (hqInfo != null) {
             if (hqInfo.size.width != width || hqInfo.size.height != height) {
                 // Zoomed since patch was created
@@ -132,14 +140,6 @@ public class PageContentView extends ViewGroup {
                 hqView.layout(hqInfo.area.left, hqInfo.area.top, hqInfo.area.right, hqInfo.area.bottom);
             }
         }
-    }
-
-    private void adjustChildView(View childView, int parentWidth, int parentHeight) {
-        childView.measure(0, 0);
-        childView.layout((parentWidth - childView.getMeasuredWidth()) / 2,
-            (parentHeight - childView.getMeasuredHeight()) / 2,
-            (parentWidth + childView.getMeasuredWidth()) / 2,
-            (parentHeight + childView.getMeasuredHeight()) / 2);
     }
     
     void loadPageContent(final PageContentProvider provider, final int index) {

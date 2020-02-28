@@ -38,7 +38,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
         } else {
             view = (PageContentView) convertView;
         }
-        view.setFinalLoadState(getFinalLoadState());
+        view.setInvalidContentLoadState(getInvalidContentLoadState());
         view.loadPageContent(getPageContentProvider(), position);
         return view;
     }
@@ -56,7 +56,7 @@ public abstract class PageContentViewAdapter extends BaseAdapter {
 
     protected abstract BitmapPostProcessor getBitmapPostProcessor();
 
-    protected abstract LoadState getFinalLoadState();
+    protected abstract LoadState getInvalidContentLoadState();
 
     protected abstract View getLoadingProgressBar();
 

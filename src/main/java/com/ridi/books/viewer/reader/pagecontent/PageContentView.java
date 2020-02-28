@@ -31,7 +31,7 @@ public class PageContentView extends ViewGroup {
     private View loadingProgressBar;
     private View loadFailedView;
     private LoadState loadState;
-    private LoadState finalLoadState;
+    private LoadState invalidContentLoadState;
 
     private boolean rendered;
 
@@ -208,7 +208,7 @@ public class PageContentView extends ViewGroup {
                 } else {
                     rendered = false;
                     fullView.setVisibility(INVISIBLE);
-                    setLoadState(finalLoadState);
+                    setLoadState(invalidContentLoadState);
                 }
 
                 requestLayout();
@@ -337,8 +337,8 @@ public class PageContentView extends ViewGroup {
         updateLoadView();
     }
 
-    void setFinalLoadState(LoadState finalState) {
-        finalLoadState = finalState;
+    void setInvalidContentLoadState(LoadState state) {
+        invalidContentLoadState = state;
     }
 
     @Override

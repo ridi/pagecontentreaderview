@@ -6,9 +6,9 @@ import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
-import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
-public class PageContentView extends ViewGroup {
+public class PageContentView extends FrameLayout {
     static final int NO_INDEX = Integer.MIN_VALUE;
 
     protected int index;
@@ -94,6 +94,8 @@ public class PageContentView extends ViewGroup {
     
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         int width, height;
         
         switch(MeasureSpec.getMode(widthMeasureSpec)) {
@@ -120,6 +122,8 @@ public class PageContentView extends ViewGroup {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+
         int width = right - left;
         int height = bottom - top;
 

@@ -15,7 +15,7 @@ public class PageContentImageView extends View {
     private boolean highQualityView;
     private boolean dirty;
 
-    PageContentImageView(Context context) {
+    public PageContentImageView(Context context) {
         this(context, false);
     }
 

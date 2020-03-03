@@ -11,27 +11,27 @@ import android.view.ViewGroup;
 public class PageContentView extends ViewGroup {
     static final int NO_INDEX = Integer.MIN_VALUE;
 
-    private int index;
-    private Size canvasSize;
-    @ColorInt private int paperColor;
-    private FitPolicy fitPolicy;
-    private BackgroundTaskListener backgroundTaskListener;
+    protected int index;
+    protected Size canvasSize;
+    @ColorInt protected int paperColor;
+    protected FitPolicy fitPolicy;
+    protected BackgroundTaskListener backgroundTaskListener;
 
-    private Size size;
-    
-    private PageContent pageContent;
-    private AsyncTask<Void, Void, PageContent> contentLoadTask;
+    protected Size size;
 
-    private PageContentImageView fullView;
-    private AsyncTask<Void, Void, Bitmap> fullRenderingTask;
-    private PageContentImageView hqView;  // high quality view
-    private AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
-    private HighQualityInfo hqInfo;
-    private BitmapPostProcessor postProcessor;
-    
-    private boolean rendered;
+    protected PageContent pageContent;
+    protected AsyncTask<Void, Void, PageContent> contentLoadTask;
 
-    PageContentView(Context context, int canvasWidth, int canvasHeight, @ColorInt int paperColor,
+    protected PageContentImageView fullView;
+    protected AsyncTask<Void, Void, Bitmap> fullRenderingTask;
+    protected PageContentImageView hqView;  // high quality view
+    protected AsyncTask<HighQualityInfo, Void, HighQualityInfo> hqRenderingTask;
+    protected HighQualityInfo hqInfo;
+    protected BitmapPostProcessor postProcessor;
+
+    protected boolean rendered;
+
+    public PageContentView(Context context, int canvasWidth, int canvasHeight, @ColorInt int paperColor,
                     FitPolicy fitPolicy, BackgroundTaskListener backgroundTaskListener,
                     BitmapPostProcessor postProcessor) {
         this(context, null);
@@ -49,11 +49,11 @@ public class PageContentView extends ViewGroup {
         addView(fullView);
     }
 
-    private PageContentView(Context context, AttributeSet attrs) {
+    public PageContentView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    void clear() {
+    protected void clear() {
         index = NO_INDEX;
         if (contentLoadTask != null) {
             contentLoadTask.cancel(true);
@@ -135,8 +135,8 @@ public class PageContentView extends ViewGroup {
             }
         }
     }
-    
-    void loadPageContent(final PageContentProvider provider, final int index) {
+
+    protected void loadPageContent(final PageContentProvider provider, final int index) {
         clear();
 
         this.index = index;
@@ -221,8 +221,8 @@ public class PageContentView extends ViewGroup {
 
         fullRenderingTask.execute();
     }
-    
-    void updateHighQuality() {
+
+    protected void updateHighQuality() {
         Rect viewArea = new Rect(getLeft(), getTop(), getRight(), getBottom());
         
         // If the viewArea's size matches the unzoomed size, there is no need for an hq patch
@@ -298,8 +298,8 @@ public class PageContentView extends ViewGroup {
             hqRenderingTask.execute(new HighQualityInfo(hqSize, hqArea));
         }
     }
-    
-    void removeHighQuality() {
+
+    protected void removeHighQuality() {
         // Stop the rendering of the patch if still going
         if (hqRenderingTask != null) {
             hqRenderingTask.cancel(true);
@@ -311,14 +311,14 @@ public class PageContentView extends ViewGroup {
         hideHqViewIfExists();
     }
 
-    private void hideHqViewIfExists() {
+    protected void hideHqViewIfExists() {
         if (hqView != null) {
             hqView.setImageBitmap(null);
             hqView.setVisibility(INVISIBLE);
         }
     }
 
-    int getIndex() {
+    protected int getIndex() {
         return index;
     }
     
@@ -360,7 +360,7 @@ public class PageContentView extends ViewGroup {
         }
     }
 
-    private abstract class AsyncRenderingTask<Params, Progress, Result>
+    protected abstract class AsyncRenderingTask<Params, Progress, Result>
             extends AsyncTask<Params, Progress, Result> {
         protected Bitmap applyPostProcessor(Bitmap bitmap) {
             if (!isCancelled() && postProcessor != null) {

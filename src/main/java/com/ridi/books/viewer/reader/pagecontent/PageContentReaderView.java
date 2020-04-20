@@ -520,13 +520,13 @@ public class PageContentReaderView extends AdapterView<PageContentViewAdapter>
         }
 
         if (!resetLayout) {
-            // Move to next or previous if current is sufficiently off center
+            // 콘텐츠가 화면 상단(0)을 벗어나면 다음으로, 화면 하단(height)를 벗어나면 이전으로 이동합니다.
             if (cv != null && scrollMode && !sliding) {
                 if (cv.getTop() + cv.getMeasuredHeight()
-                    + pageGapPixels * scale / 2 + scrollOffsetY < getHeight() / 2) {
+                    + pageGapPixels * scale / 2 + scrollOffsetY < 0) {
                     setCurrentIndexToRightOrDown();
                 }
-                if (cv.getTop() - pageGapPixels * scale / 2 + scrollOffsetY >= getHeight() / 2) {
+                if (cv.getTop() - pageGapPixels * scale / 2 + scrollOffsetY >= getHeight()) {
                     setCurrentIndexToLeftOrUp();
                 }
             }
